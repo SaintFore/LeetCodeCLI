@@ -1,0 +1,35 @@
+name: Test AUR Connection
+
+on:
+  workflow_dispatch:
+
+jobs:
+  test-ssh:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Setup SSH
+      uses: webfactory/ssh-agent@v0.9.0
+      with:
+        ssh-private-key: ${{ secrets.AUR_SSH_PRIVATE_KEY }}
+
+    - name: Test SSH connection to AUR
+      run: |
+        ssh -T aur@aur.archlinux.org
+
+  test-clone:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Setup SSH
+      uses: webfactory/ssh-agent@v0.9.0
+      with:
+        ssh-private-key: ${{ secrets.AUR_SSH_PRIVATE_KEY }}
+
+    - name: Test clone main package
+      run: |
+        git clone ssh://aur@aur.archlinux.org/leetcode-fsrs-cli.git test-main
+        ls -la test-main/
+
+    - name: Test clone binary package
+      run: |
+        git clone ssh://aur@aur.archlinux.org/leetcode-fsrs-cli-bin.git test-bin
+        ls -la test-bin/
