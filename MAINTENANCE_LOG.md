@@ -25,6 +25,27 @@
 
 ## 📝 AI维护记录
 
+### 2025-11-28: GitHub Actions自动更新和文档优化
+**维护者**: Claude Code AI Assistant
+**任务**: 配置GitHub Actions自动更新AUR包，优化文档结构
+
+#### 完成的工作
+1. **GitHub Actions配置**
+   - 创建 `.github/workflows/aur-update.yml` 工作流
+   - 配置SSH密钥认证和AUR包自动更新
+   - 解决SSH连接测试和权限问题
+   - 实现标签推送时自动更新AUR包
+
+2. **文档结构优化**
+   - 删除冗余文档文件
+   - 整合维护记录和发布信息
+   - 保持最小化的文档结构
+
+#### 技术细节
+- **自动触发**: 推送新标签时自动更新AUR包
+- **双包更新**: 同时更新源码版和二进制版
+- **状态**: GitHub Actions工作流运行成功
+
 ### 2025-11-28: 二进制包支持和依赖优化
 **维护者**: Claude Code AI Assistant
 **任务**: 添加二进制包支持，优化依赖，更新文档
@@ -110,6 +131,13 @@ leetcode_fsrs_cli/
 3. **文档更新** → 更新README和维护记录
 4. **测试验证** → 确保所有功能正常
 5. **发布部署** → 推送到GitHub和AUR
+
+### GitHub Actions自动更新
+项目已配置GitHub Actions工作流，当推送新标签时会自动更新AUR包：
+- **触发条件**: 推送 `v*` 标签
+- **更新包**: 同时更新源码版和二进制版
+- **配置位置**: `.github/workflows/aur-update.yml`
+- **所需Secret**: `AUR_SSH_PRIVATE_KEY` (AUR SSH私钥)
 
 ### 依赖管理
 - **Python依赖**: requirements.txt

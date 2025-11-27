@@ -3,6 +3,7 @@
 基于FSRS（Free Spaced Repetition Scheduler）记忆算法的LeetCode刷题CLI工具，通过科学的间隔重复算法帮助你高效刷题。
 
 [![AUR](https://img.shields.io/aur/version/leetcode-fsrs-cli)](https://aur.archlinux.org/packages/leetcode-fsrs-cli)
+[![AUR](https://img.shields.io/aur/version/leetcode-fsrs-cli-bin)](https://aur.archlinux.org/packages/leetcode-fsrs-cli-bin)
 [![License](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 
 ## 🚀 快速开始
