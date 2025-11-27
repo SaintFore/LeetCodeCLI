@@ -36,15 +36,15 @@
 
 #### 修复方案
 1. **添加Arch工具安装**: 在Ubuntu runner中安装wget和libarchive-tools
-2. **手动生成.SRCINFO**: 使用cat命令直接创建.SRCINFO文件，避免Docker权限问题
+2. **手动生成.SRCINFO**: 使用echo命令创建.SRCINFO文件，避免YAML语法错误
 3. **移除错误注释**: 删除关于AUR自动处理.SRCINFO的错误说明
 
 #### 技术细节
 - **修复文件**: `.github/workflows/aur-update.yml`
-- **测试标签**: 创建v1.2.7、v1.2.8和v1.2.9标签测试修复
+- **测试标签**: 创建v1.2.7、v1.2.8、v1.2.9和v1.3.0标签测试修复
 - **包名修正**: 将bsdtar改为libarchive-tools (Ubuntu包名)
-- **Docker问题**: 解决GPG签名和root权限问题
-- **预期结果**: AUR包版本应该更新到v1.2.9
+- **YAML语法**: 修复heredoc导致的语法错误
+- **预期结果**: AUR包版本应该更新到v1.3.0
 
 ### 2025-11-28: GitHub Actions自动更新和文档优化
 **维护者**: Claude Code AI Assistant
