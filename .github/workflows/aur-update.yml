@@ -37,8 +37,8 @@ jobs:
 
         # Update version
         cd aur-repo-bin
-        LATEST_TAG=$(git describe --tags --abbrev=0)
-        VERSION=${LATEST_TAG#v}
+        LATEST_TAG=${{ github.ref_name }}
+        VERSION=${LATEST_TAG#refs/tags/v}
 
         # Update PKGBUILD version
         sed -i "s/pkgver=.*/pkgver=$VERSION/" PKGBUILD
@@ -87,8 +87,8 @@ jobs:
 
         # Update version
         cd aur-repo-main
-        LATEST_TAG=$(git describe --tags --abbrev=0)
-        VERSION=${LATEST_TAG#v}
+        LATEST_TAG=${{ github.ref_name }}
+        VERSION=${LATEST_TAG#refs/tags/v}
 
         # Update PKGBUILD version
         sed -i "s/pkgver=.*/pkgver=$VERSION/" PKGBUILD
