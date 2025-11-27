@@ -46,6 +46,26 @@
 - **YAML语法**: 修复heredoc导致的语法错误
 - **预期结果**: AUR包版本应该更新到v1.3.0
 
+### 2025-11-28: 修复.SRCINFO文件格式验证错误
+**维护者**: Claude Code AI Assistant
+**任务**: 修复.SRCINFO文件格式验证错误 "missing mandatory field: pkgver"
+
+#### 问题诊断
+- **根本原因**: 手动生成的.SRCINFO文件缺少必需的字段和格式
+- **验证错误**: AUR hook拒绝提交，提示缺少pkgver字段
+- **格式问题**: 生成的.SRCINFO文件不完整，缺少makedepends等字段
+
+#### 修复方案
+1. **完善.SRCINFO格式**: 添加所有必需的字段 (makedepends, optdepends, backup等)
+2. **匹配现有格式**: 确保新生成的.SRCINFO与AUR上现有文件格式一致
+3. **依赖清理**: 移除已删除的依赖项 (pandas, numpy, rich, tabulate)
+
+#### 技术细节
+- **修复文件**: `.github/workflows/aur-update.yml`
+- **测试标签**: 创建v1.3.1标签测试修复
+- **依赖优化**: 从6个依赖减少到2个必需依赖
+- **预期结果**: AUR包版本应该成功更新到v1.3.1
+
 ### 2025-11-28: GitHub Actions自动更新和文档优化
 **维护者**: Claude Code AI Assistant
 **任务**: 配置GitHub Actions自动更新AUR包，优化文档结构

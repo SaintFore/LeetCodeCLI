@@ -59,9 +59,6 @@ jobs:
         echo "\tarch = any" >> .SRCINFO
         echo "\tlicense = MIT" >> .SRCINFO
         echo "\tmakedepends = python-setuptools" >> .SRCINFO
-        echo "\tdepends = python" >> .SRCINFO
-        echo "\tdepends = python-click" >> .SRCINFO
-        echo "\tdepends = python-requests" >> .SRCINFO
         echo "\toptdepends = git: for version control integration" >> .SRCINFO
         echo "\tprovides = leetcode-fsrs-cli" >> .SRCINFO
         echo "\tconflicts = leetcode-fsrs-cli" >> .SRCINFO
@@ -71,6 +68,9 @@ jobs:
         echo "\tsha256sums = 8d75c0c035dca6981ad4b4ef99fccfa6515c112ea514bedd7c29c0387e5101dd" >> .SRCINFO
         echo "" >> .SRCINFO
         echo "pkgname = leetcode-fsrs-cli-bin" >> .SRCINFO
+        echo "\tdepends = python" >> .SRCINFO
+        echo "\tdepends = python-click" >> .SRCINFO
+        echo "\tdepends = python-requests" >> .SRCINFO
 
     - name: Commit and push binary package
       run: |
@@ -137,9 +137,6 @@ jobs:
         echo "\tarch = any" >> .SRCINFO
         echo "\tlicense = MIT" >> .SRCINFO
         echo "\tmakedepends = python-setuptools" >> .SRCINFO
-        echo "\tdepends = python" >> .SRCINFO
-        echo "\tdepends = python-click" >> .SRCINFO
-        echo "\tdepends = python-requests" >> .SRCINFO
         echo "\toptdepends = git: for version control integration" >> .SRCINFO
         echo "\tprovides = leetcode-fsrs-cli" >> .SRCINFO
         echo "\tconflicts = leetcode-fsrs-cli" >> .SRCINFO
@@ -149,6 +146,9 @@ jobs:
         echo "\tsha256sums = 8d75c0c035dca6981ad4b4ef99fccfa6515c112ea514bedd7c29c0387e5101dd" >> .SRCINFO
         echo "" >> .SRCINFO
         echo "pkgname = leetcode-fsrs-cli" >> .SRCINFO
+        echo "\tdepends = python" >> .SRCINFO
+        echo "\tdepends = python-click" >> .SRCINFO
+        echo "\tdepends = python-requests" >> .SRCINFO
 
     - name: Commit and push main package
       run: |
