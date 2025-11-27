@@ -24,7 +24,7 @@ jobs:
       run: |
         ssh-keyscan aur.archlinux.org >> ~/.ssh/known_hosts
         echo "Testing SSH connection to AUR..."
-        ssh -o StrictHostKeyChecking=no -T aur@aur.archlinux.org
+        ssh -o StrictHostKeyChecking=no -T aur@aur.archlinux.org || true
 
     - name: Clone AUR binary repository
       run: |
@@ -78,7 +78,7 @@ jobs:
       run: |
         ssh-keyscan aur.archlinux.org >> ~/.ssh/known_hosts
         echo "Testing SSH connection to AUR..."
-        ssh -o StrictHostKeyChecking=no -T aur@aur.archlinux.org
+        ssh -o StrictHostKeyChecking=no -T aur@aur.archlinux.org || true
 
     - name: Clone AUR main repository
       run: |
