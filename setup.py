@@ -4,7 +4,7 @@ Setup script for LeetCode FSRS CLI
 
 项目包配置说明:
 - 包名: leetcode-fsrs-cli
-- 版本: 1.1.0
+- 版本: 1.4.0
 - 描述: 基于FSRS间隔重复算法的LeetCode刷题CLI工具
 - 依赖: 见requirements.txt (已优化，仅保留必需依赖)
 - 入口点: leetcode-fsrs 命令
@@ -34,7 +34,7 @@ with open("requirements.txt", "r", encoding="utf-8") as fh:
 
 setup(
     name="leetcode-fsrs-cli",
-    version="1.1.0",
+    version="1.4.0",
     author="SaintFore",
     author_email="saintfore@example.com",
     description="A CLI tool for LeetCode practice using FSRS spaced repetition algorithm",

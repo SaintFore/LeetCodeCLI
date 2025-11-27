@@ -5,6 +5,25 @@
 [![AUR](https://img.shields.io/aur/version/leetcode-fsrs-cli)](https://aur.archlinux.org/packages/leetcode-fsrs-cli)
 [![AUR](https://img.shields.io/aur/version/leetcode-fsrs-cli-bin)](https://aur.archlinux.org/packages/leetcode-fsrs-cli-bin)
 [![License](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+[![Version](https://img.shields.io/badge/version-1.4.0-blue.svg)](https://github.com/SaintFore/LeetCodeCLI/releases)
+
+## ✨ 特性概览
+
+- **🎯 科学记忆算法**: 基于FSRS v4间隔重复算法，优化记忆保留
+- **🚀 零依赖二进制版**: 提供完全独立的二进制版本，无需Python环境
+- **📊 智能复习调度**: 根据记忆稳定性自动计算最优复习间隔
+- **🔧 轻量级设计**: 从6个依赖优化到2个必需依赖，极致精简
+- **📱 跨平台支持**: 支持Arch Linux (AUR) 和Python环境
+- **⚡ 自动化发布**: GitHub Actions自动更新AUR包
+- **📝 完整文档**: 详细的用户指南和维护记录
+
+## 🎉 版本亮点 (v1.4.0)
+
+- ✅ **自动化发布流程**: GitHub Actions自动更新AUR双版本
+- ✅ **依赖优化**: 从6个依赖减少到2个必需依赖
+- ✅ **二进制包支持**: 提供零依赖的二进制版本
+- ✅ **SHA256校验和自动更新**: 解决AUR包构建验证问题
+- ✅ **完整文档体系**: 用户文档、维护记录、AI维护指南
 
 ## 🚀 快速开始
 
