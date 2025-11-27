@@ -33,13 +33,7 @@ jobs:
 
     - name: Update binary package files
       run: |
-        # Copy updated files
-        echo "Copying PKGBUILD and .SRCINFO files..."
-        ls -la leetcode-fsrs-cli-bin/ || echo "Directory not found"
-        cp leetcode-fsrs-cli-bin/PKGBUILD aur-repo-bin/
-        cp leetcode-fsrs-cli-bin/.SRCINFO aur-repo-bin/
-
-        # Update version
+        # Update version in AUR binary repository
         cd aur-repo-bin
         LATEST_TAG=${{ github.ref_name }}
         VERSION=${LATEST_TAG#refs/tags/v}
