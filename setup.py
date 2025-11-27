@@ -1,6 +1,23 @@
 #!/usr/bin/env python3
 """
 Setup script for LeetCode FSRS CLI
+
+项目包配置说明:
+- 包名: leetcode-fsrs-cli
+- 版本: 1.0.0
+- 描述: 基于FSRS间隔重复算法的LeetCode刷题CLI工具
+- 依赖: 见requirements.txt
+- 入口点: leetcode-fsrs 命令
+
+维护信息:
+- 项目状态: 已完成并发布到AUR
+- 最后维护: 2025-11-28
+- 维护记录: 详见MAINTENANCE_LOG.md
+
+注意:
+- 更新版本时需要同时更新PKGBUILD文件
+- 依赖变更需要更新requirements.txt
+- 包数据包含data目录下的JSON配置文件
 """
 
 from setuptools import setup, find_packages
@@ -17,12 +34,12 @@ with open("requirements.txt", "r", encoding="utf-8") as fh:
 setup(
     name="leetcode-fsrs-cli",
     version="1.0.0",
-    author="Julien",
-    author_email="your-email@example.com",
+    author="SaintFore",
+    author_email="saintfore@example.com",
     description="A CLI tool for LeetCode practice using FSRS spaced repetition algorithm",
     long_description=long_description,
     long_description_content_type="text/markdown",
-    url="https://github.com/your-username/leetcode-fsrs-cli",
+    url="https://github.com/SaintFore/LeetCodeCLI",
     packages=find_packages(),
     classifiers=[
         "Development Status :: 4 - Beta",

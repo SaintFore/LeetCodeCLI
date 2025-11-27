@@ -1,0 +1,151 @@
+# LeetCode FSRS CLI 维护记录
+
+## 📋 项目维护指南
+
+这个文档记录了项目的维护历史和重要变更，方便AI助手理解项目状态和进行后续维护。
+
+---
+
+## 🎯 项目现状 (2025-11-28)
+
+### 当前状态
+- ✅ **项目完成**: 所有核心功能已实现
+- ✅ **AUR发布**: 已成功发布到Arch User Repository
+- ✅ **GitHub发布**: 代码已推送到GitHub仓库
+- ✅ **包管理**: 支持pip和AUR安装
+- ✅ **文档完整**: 用户文档和维护文档齐全
+
+### 技术栈
+- **语言**: Python 3.8+
+- **包管理**: setuptools, pip
+- **发布平台**: GitHub, AUR
+- **数据存储**: JSON文件 (XDG标准目录)
+
+---
+
+## 📝 AI维护记录
+
+### 2025-11-28: 项目文档重构和AUR发布
+**维护者**: Claude Code AI Assistant
+**任务**: 重构项目文档，发布到AUR，添加AI友好的维护记录
+
+#### 完成的工作
+1. **AUR发布准备**
+   - 修复PKGBUILD中的SHA256校验和
+   - 解决data/config.json缺失问题
+   - 成功构建和测试AUR包
+   - 推送到AUR仓库 (leetcode-fsrs-cli)
+
+2. **文档重构**
+   - 创建本维护记录文档
+   - 更新README.md使其简洁易懂
+   - 添加AI友好的代码注释和文档结构
+   - 统一项目文档格式
+
+3. **代码质量改进**
+   - 添加详细的维护说明
+   - 记录项目架构和依赖关系
+   - 提供故障排除指南
+
+#### 技术细节
+- **AUR包名**: leetcode-fsrs-cli
+- **版本**: 1.0.0-1
+- **GitHub仓库**: https://github.com/SaintFore/LeetCodeCLI
+- **AUR仓库**: https://aur.archlinux.org/packages/leetcode-fsrs-cli
+
+---
+
+## 🏗️ 项目架构
+
+### 核心模块
+```
+leetcode_fsrs_cli/
+├── cli.py           # CLI交互界面 (Click框架)
+├── fsrs.py          # FSRS算法核心实现
+├── leetcode.py      # 题目管理和数据结构
+├── scheduler.py     # 复习调度和优先级计算
+├── storage.py       # 数据持久化 (JSON存储)
+└── __init__.py      # 包初始化
+```
+
+### 数据流
+1. **用户输入** → `cli.py` → 命令解析
+2. **算法计算** → `fsrs.py` → 记忆间隔
+3. **题目管理** → `leetcode.py` → 题目数据
+4. **调度逻辑** → `scheduler.py` → 复习计划
+5. **数据存储** → `storage.py` → JSON文件
+
+---
+
+## 🔧 维护指南
+
+### 版本更新流程
+1. **代码变更** → 更新功能/修复bug
+2. **版本号更新** → 修改setup.py和PKGBUILD
+3. **文档更新** → 更新README和维护记录
+4. **测试验证** → 确保所有功能正常
+5. **发布部署** → 推送到GitHub和AUR
+
+### 依赖管理
+- **Python依赖**: requirements.txt
+- **系统依赖**: PKGBUILD中的depends
+- **构建工具**: setuptools
+
+### 故障排除
+```bash
+# 检查包安装
+pip show leetcode-fsrs-cli
+
+# 检查数据目录
+ls -la ~/.config/leetcode-fsrs-cli/
+
+# 测试命令
+leetcode-fsrs --help
+```
+
+---
+
+## 🤖 AI维护友好提示
+
+### 代码理解要点
+- **模块职责**: 每个Python文件有明确的单一职责
+- **数据流**: 使用JSON文件存储，遵循XDG标准
+- **算法核心**: FSRS v4算法在fsrs.py中实现
+- **CLI框架**: 使用Click库构建命令行界面
+
+### 维护注意事项
+- **数据兼容性**: 更新时注意JSON数据格式兼容
+- **依赖版本**: 检查requirements.txt中的版本兼容性
+- **AUR规范**: 遵循Arch Linux包管理规范
+- **用户数据**: 数据存储在~/.config/leetcode-fsrs-cli/
+
+### 扩展建议
+- **新功能**: 在相应模块中添加，保持模块化
+- **测试**: 添加单元测试确保功能稳定
+- **文档**: 及时更新维护记录和用户文档
+
+---
+
+## 📊 发布状态
+
+| 平台 | 状态 | 版本 | 链接 |
+|------|------|------|------|
+| GitHub | ✅ 已发布 | v1.0.0 | https://github.com/SaintFore/LeetCodeCLI |
+| AUR | ✅ 已发布 | 1.0.0-1 | https://aur.archlinux.org/packages/leetcode-fsrs-cli |
+| PyPI | ⏳ 待发布 | - | - |
+
+---
+
+## 🎯 后续维护任务
+
+- [ ] 添加单元测试
+- [ ] 集成LeetCode API
+- [ ] 添加更多可视化功能
+- [ ] 发布到PyPI
+- [ ] 添加国际化支持
+
+---
+
+**维护记录更新**: 2025-11-28 by Claude Code AI Assistant
+
+这个文档将持续更新，记录所有重要的维护活动和项目变更。
