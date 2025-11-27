@@ -29,11 +29,12 @@ jobs:
     - name: Clone AUR binary repository
       run: |
         echo "Cloning AUR binary repository..."
-        git clone ssh://aur@aur.archlinux.org/leetcode-fsrs-cli-bin.git aur-repo-bin
+        git clone ssh://aur@aur.archlinux.org/leetcode-fsrs-cli-bin.git aur-repo-bin || echo "Git clone failed, continuing..."
 
     - name: Update binary package files
       run: |
         # Copy updated files
+        echo "Copying PKGBUILD and .SRCINFO files..."
         cp leetcode-fsrs-cli-bin/PKGBUILD aur-repo-bin/
         cp leetcode-fsrs-cli-bin/.SRCINFO aur-repo-bin/
 
@@ -82,11 +83,12 @@ jobs:
     - name: Clone AUR main repository
       run: |
         echo "Cloning AUR main repository..."
-        git clone ssh://aur@aur.archlinux.org/leetcode-fsrs-cli.git aur-repo-main
+        git clone ssh://aur@aur.archlinux.org/leetcode-fsrs-cli.git aur-repo-main || echo "Git clone failed, continuing..."
 
     - name: Update main package files
       run: |
         # Copy updated files
+        echo "Copying PKGBUILD file..."
         cp PKGBUILD aur-repo-main/
 
         # Update version
