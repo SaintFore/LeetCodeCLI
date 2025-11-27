@@ -91,11 +91,10 @@ User configurable options in `config.json`:
 - click: CLI framework (实际使用)
 - requests: HTTP requests (预留，用于未来API集成)
 
-### 未使用的依赖 (可考虑移除)
-- pandas: Data manipulation (未使用)
-- numpy: Numerical computations (未使用)
-- rich: Rich console output (未使用)
-- tabulate: Table formatting (未使用)
+### 依赖优化状态
+- ✅ **已清理**: pandas, numpy, rich, tabulate (这些依赖在代码中未实际使用)
+- ✅ **精简后**: 从6个依赖减少到2个必需依赖
+- ✅ **二进制版本**: 提供零依赖的 `leetcode-fsrs-cli-bin` 包
 
 ### System Requirements
 - Python 3.8+
@@ -151,7 +150,21 @@ leetcode-fsrs-cli/
 
 ## 重要提醒
 
-- 项目已成功发布到AUR: `leetcode-fsrs-cli`
+- **AUR双版本**:
+  - 源码版: `leetcode-fsrs-cli` (精简依赖)
+  - 二进制版: `leetcode-fsrs-cli-bin` (零依赖)
 - GitHub仓库: https://github.com/SaintFore/LeetCodeCLI
 - 详细维护记录见: `MAINTENANCE_LOG.md`
 - AI维护指南见: `AI_MAINTENANCE_GUIDE.md`
+
+## 双版本策略
+
+### 源码版 (`leetcode-fsrs-cli`)
+- **依赖**: `python-click`, `python-requests`
+- **特点**: 轻量，适合开发者
+- **安装**: `paru -S leetcode-fsrs-cli`
+
+### 二进制版 (`leetcode-fsrs-cli-bin`)
+- **依赖**: 无 (完全独立)
+- **特点**: 零依赖，适合普通用户
+- **安装**: `paru -S leetcode-fsrs-cli-bin`

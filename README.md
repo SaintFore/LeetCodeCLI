@@ -10,6 +10,8 @@
 ### 安装
 
 #### Arch Linux (AUR)
+
+**源码版** (推荐开发者)
 ```bash
 # 使用 paru
 paru -S leetcode-fsrs-cli
@@ -17,6 +19,19 @@ paru -S leetcode-fsrs-cli
 # 或使用 yay
 yay -S leetcode-fsrs-cli
 ```
+
+**二进制版** (零依赖，推荐普通用户)
+```bash
+# 使用 paru
+paru -S leetcode-fsrs-cli-bin
+
+# 或使用 yay
+yay -S leetcode-fsrs-cli-bin
+```
+
+**版本对比**:
+- **源码版** (`leetcode-fsrs-cli`): 需要安装 `python-click` 和 `python-requests` 依赖
+- **二进制版** (`leetcode-fsrs-cli-bin`): 完全独立，无需安装任何Python包
 
 #### 从源码安装
 ```bash

@@ -134,8 +134,9 @@ dist/
 *.egg-info/
 __pycache__/
 
-# AUR repository (should be managed separately)
+# AUR repositories (should be managed separately)
 aur-repo/
+leetcode-fsrs-cli-bin/
 
 # IDE
 .vscode/

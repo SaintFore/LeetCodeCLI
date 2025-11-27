@@ -25,6 +25,31 @@
 
 ## 📝 AI维护记录
 
+### 2025-11-28: 二进制包支持和依赖优化
+**维护者**: Claude Code AI Assistant
+**任务**: 添加二进制包支持，优化依赖，更新文档
+
+#### 完成的工作
+1. **依赖优化**
+   - 清理未使用的依赖: pandas, numpy, rich, tabulate
+   - 从6个依赖减少到2个必需依赖 (python-click, python-requests)
+   - 更新requirements.txt和PKGBUILD
+
+2. **二进制包支持**
+   - 创建 `leetcode-fsrs-cli-bin` 包 (零依赖版本)
+   - 添加二进制构建脚本: build_binary.sh, simple_binary_build.sh
+   - 创建PKGBUILD.bin用于AUR二进制包
+
+3. **文档更新**
+   - 更新README.md添加双版本安装说明
+   - 更新CLAUDE.md记录依赖优化和二进制包策略
+   - 更新本维护记录
+
+#### 技术细节
+- **源码版**: leetcode-fsrs-cli (精简依赖)
+- **二进制版**: leetcode-fsrs-cli-bin (零依赖)
+- **依赖优化**: 从6个依赖减少到2个
+
 ### 2025-11-28: 项目文档重构和AUR发布
 **维护者**: Claude Code AI Assistant
 **任务**: 重构项目文档，发布到AUR，添加AI友好的维护记录
@@ -131,7 +156,8 @@ leetcode-fsrs --help
 | 平台 | 状态 | 版本 | 链接 |
 |------|------|------|------|
 | GitHub | ✅ 已发布 | v1.0.0 | https://github.com/SaintFore/LeetCodeCLI |
-| AUR | ✅ 已发布 | 1.0.0-1 | https://aur.archlinux.org/packages/leetcode-fsrs-cli |
+| AUR (源码版) | ✅ 已发布 | 1.0.0-1 | https://aur.archlinux.org/packages/leetcode-fsrs-cli |
+| AUR (二进制版) | ✅ 已发布 | 1.0.0-1 | https://aur.archlinux.org/packages/leetcode-fsrs-cli-bin |
 | PyPI | ⏳ 待发布 | - | - |
 
 ---
