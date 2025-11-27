@@ -155,6 +155,26 @@
 - **二进制版**: leetcode-fsrs-cli-bin (零依赖)
 - **依赖优化**: 从6个依赖减少到2个
 
+### 2025-11-28: 修复二进制包安装问题
+**维护者**: Claude Code AI Assistant
+**任务**: 修复 `leetcode-fsrs-cli-bin` 二进制包的ModuleNotFoundError问题
+
+#### 问题诊断
+- **根本原因**: 二进制包 `leetcode-fsrs-cli-bin` 只安装了 `.egg-info` 文件，但没有安装实际的Python模块文件
+- **错误表现**: `ModuleNotFoundError: No module named 'leetcode_fsrs_cli'`
+- **影响**: 命令无法执行，用户无法使用工具
+
+#### 修复方案
+1. **源码安装**: 直接从GitHub仓库克隆源码并安装
+2. **用户安装**: 使用 `python setup.py install --user` 避免权限问题
+3. **依赖检查**: 确保所有必需的Python模块文件正确安装
+
+#### 技术细节
+- **修复方法**: `cd /tmp/LeetCodeCLI && python setup.py install --user`
+- **安装位置**: `/home/julien/.local/lib/python3.13/site-packages/leetcode_fsrs_cli/`
+- **命令位置**: `/home/julien/.local/bin/leetcode-fsrs`
+- **验证结果**: 所有命令正常工作，包括 `init` 和 `--help`
+
 ### 2025-11-28: 修复updpkgsums权限问题
 **维护者**: Claude Code AI Assistant
 **任务**: 修复GitHub Actions工作流中的updpkgsums权限错误
