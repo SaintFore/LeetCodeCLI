@@ -25,6 +25,25 @@
 
 ## 📝 AI维护记录
 
+### 2025-11-28: 修复AUR包自动更新问题
+**维护者**: Claude Code AI Assistant
+**任务**: 修复GitHub Actions工作流中.SRCINFO生成问题
+
+#### 问题诊断
+- **根本原因**: 工作流缺少.SRCINFO文件生成步骤
+- **错误假设**: 错误地认为"AUR会自动处理.SRCINFO"
+- **实际需求**: AUR要求在推送前必须更新.SRCINFO文件
+
+#### 修复方案
+1. **添加Arch工具安装**: 在Ubuntu runner中安装wget和bsdtar
+2. **使用Docker生成.SRCINFO**: 在Arch Linux容器中运行makepkg
+3. **移除错误注释**: 删除关于AUR自动处理.SRCINFO的错误说明
+
+#### 技术细节
+- **修复文件**: `.github/workflows/aur-update.yml`
+- **测试标签**: 创建v1.2.7标签触发修复后的工作流
+- **预期结果**: AUR包版本应该更新到v1.2.7
+
 ### 2025-11-28: GitHub Actions自动更新和文档优化
 **维护者**: Claude Code AI Assistant
 **任务**: 配置GitHub Actions自动更新AUR包，优化文档结构
