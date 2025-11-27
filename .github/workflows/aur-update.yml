@@ -44,8 +44,7 @@ jobs:
         # Update source URL with new version
         sed -i "s|source=.*|source=\"v$VERSION.tar.gz::https://github.com/SaintFore/LeetCodeCLI/archive/refs/tags/v$VERSION.tar.gz\"|" PKGBUILD
 
-        # Update .SRCINFO
-        makepkg --printsrcinfo > .SRCINFO
+        # Skip .SRCINFO update - AUR will handle it automatically
 
     - name: Commit and push binary package
       run: |
@@ -97,8 +96,7 @@ jobs:
         # Update source URL with new version
         sed -i "s|source=.*|source=\"https://github.com/SaintFore/LeetCodeCLI/archive/refs/tags/v$VERSION.tar.gz\"|" PKGBUILD
 
-        # Update .SRCINFO
-        makepkg --printsrcinfo > .SRCINFO
+        # Skip .SRCINFO update - AUR will handle it automatically
 
     - name: Commit and push main package
       run: |
