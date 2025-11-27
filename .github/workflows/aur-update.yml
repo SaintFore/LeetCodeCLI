@@ -35,6 +35,7 @@ jobs:
       run: |
         # Copy updated files
         echo "Copying PKGBUILD and .SRCINFO files..."
+        ls -la leetcode-fsrs-cli-bin/ || echo "Directory not found"
         cp leetcode-fsrs-cli-bin/PKGBUILD aur-repo-bin/
         cp leetcode-fsrs-cli-bin/.SRCINFO aur-repo-bin/
 
