@@ -20,6 +20,11 @@ jobs:
       with:
         ssh-private-key: ${{ secrets.AUR_SSH_PRIVATE_KEY }}
 
+    - name: Test SSH connection
+      run: |
+        ssh-keyscan aur.archlinux.org >> ~/.ssh/known_hosts
+        ssh -o StrictHostKeyChecking=no -T aur@aur.archlinux.org
+
     - name: Clone AUR binary repository
       run: |
         git clone ssh://aur@aur.archlinux.org/leetcode-fsrs-cli-bin.git aur-repo-bin
@@ -65,6 +70,11 @@ jobs:
       uses: webfactory/ssh-agent@v0.9.0
       with:
         ssh-private-key: ${{ secrets.AUR_SSH_PRIVATE_KEY }}
+
+    - name: Test SSH connection
+      run: |
+        ssh-keyscan aur.archlinux.org >> ~/.ssh/known_hosts
+        ssh -o StrictHostKeyChecking=no -T aur@aur.archlinux.org
 
     - name: Clone AUR main repository
       run: |
