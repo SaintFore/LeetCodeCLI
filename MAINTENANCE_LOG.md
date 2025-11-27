@@ -155,6 +155,25 @@
 - **二进制版**: leetcode-fsrs-cli-bin (零依赖)
 - **依赖优化**: 从6个依赖减少到2个
 
+### 2025-11-28: 修复updpkgsums权限问题
+**维护者**: Claude Code AI Assistant
+**任务**: 修复GitHub Actions工作流中的updpkgsums权限错误
+
+#### 问题诊断
+- **根本原因**: `updpkgsums` 命令在Docker容器中以root用户运行，但makepkg不允许root权限
+- **错误表现**: `ERROR: Running makepkg as root is not allowed`
+- **影响**: SHA256校验和无法自动更新，AUR包构建失败
+
+#### 修复方案
+1. **用户权限调整**: 创建builder用户后立即运行 `updpkgsums`
+2. **命令执行顺序**: 确保所有makepkg相关操作都以builder用户运行
+3. **权限一致性**: `updpkgsums` 和 `makepkg` 都使用相同用户权限
+
+#### 技术细节
+- **修复文件**: `.github/workflows/aur-update.yml`
+- **关键修改**: 将 `su builder -c 'updpkgsums'` 放在用户创建后
+- **测试标签**: 创建v1.4.1标签验证修复效果
+
 ### 2025-11-28: 版本1.4.0发布 - 阶段性收尾
 **维护者**: Claude Code AI Assistant
 **任务**: 发布v1.4.0版本，完成项目阶段性收尾
