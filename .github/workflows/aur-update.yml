@@ -40,43 +40,43 @@ jobs:
       run: |
         # Update version in AUR binary repository
         cd aur-repo-bin
-        LATEST_TAG=${{ github.ref_name }}
-        VERSION=${LATEST_TAG#refs/tags/v}
+        VERSION=${{ github.ref_name }}
+        VERSION=${VERSION#v}
 
         # Update PKGBUILD version
-        sed -i "s/pkgver=.*/pkgver=$VERSION/" PKGBUILD
+        sed -i "s/^pkgver=.*/pkgver=$VERSION/" PKGBUILD
 
         # Update source URL with new version
-        sed -i "s|source=.*|source=\"v$VERSION.tar.gz::https://github.com/SaintFore/LeetCodeCLI/archive/refs/tags/v$VERSION.tar.gz\"|" PKGBUILD
+        sed -i "s|^source=.*|source=(\"https://github.com/SaintFore/LeetCodeCLI/archive/refs/tags/v$VERSION.tar.gz\")|" PKGBUILD
 
-        # Generate .SRCINFO using a simpler approach
-        # Create a complete .SRCINFO file manually since we can't use makepkg in Docker
-        echo "pkgbase = leetcode-fsrs-cli-bin" > .SRCINFO
-        echo "\tpkgdesc = A CLI tool for LeetCode practice using FSRS spaced repetition algorithm (binary version with minimal dependencies)" >> .SRCINFO
-        echo "\tpkgver = $VERSION" >> .SRCINFO
-        echo "\tpkgrel = 1" >> .SRCINFO
-        echo "\turl = https://github.com/SaintFore/LeetCodeCLI" >> .SRCINFO
-        echo "\tarch = any" >> .SRCINFO
-        echo "\tlicense = MIT" >> .SRCINFO
-        echo "\tmakedepends = python-setuptools" >> .SRCINFO
-        echo "\tdepends = python" >> .SRCINFO
-        echo "\tdepends = python-click" >> .SRCINFO
-        echo "\tdepends = python-requests" >> .SRCINFO
-        echo "\toptdepends = git: for version control integration" >> .SRCINFO
-        echo "\tprovides = leetcode-fsrs-cli" >> .SRCINFO
-        echo "\tconflicts = leetcode-fsrs-cli" >> .SRCINFO
-        echo "\treplaces = leetcode-fsrs-cli" >> .SRCINFO
-        echo "\tbackup = etc/leetcode-fsrs-cli/config.json" >> .SRCINFO
-        echo "\tsource = v$VERSION.tar.gz::https://github.com/SaintFore/LeetCodeCLI/archive/refs/tags/v$VERSION.tar.gz" >> .SRCINFO
-        echo "\tsha256sums = 8d75c0c035dca6981ad4b4ef99fccfa6515c112ea514bedd7c29c0387e5101dd" >> .SRCINFO
-        echo "" >> .SRCINFO
-        echo "pkgname = leetcode-fsrs-cli-bin" >> .SRCINFO
+        # Generate .SRCINFO using Docker and makepkg
+        docker run --rm -v $(pwd):/build archlinux:latest bash -c "
+          cd /build && \\
+          pacman -Sy --noconfirm base-devel && \\
+          useradd -m builder && \\
+          chown -R builder:builder /build && \\
+          su builder -c 'makepkg --printsrcinfo > .SRCINFO'
+        "
+
+        # Verify generated .SRCINFO
+        echo "Generated .SRCINFO:"
+        cat .SRCINFO | head -20
 
     - name: Commit and push binary package
       run: |
         cd aur-repo-bin
+        VERSION=${{ github.ref_name }}
+        VERSION=${VERSION#v}
+
         git config user.name "GitHub Actions"
         git config user.email "actions@github.com"
+
+        # Check if there are changes
+        if git diff --quiet PKGBUILD .SRCINFO; then
+          echo "No changes detected"
+          exit 0
+        fi
+
         git add PKGBUILD .SRCINFO
         git commit -m "Update to version $VERSION"
         git push origin master
@@ -118,43 +118,43 @@ jobs:
 
         # Update version
         cd aur-repo-main
-        LATEST_TAG=${{ github.ref_name }}
-        VERSION=${LATEST_TAG#refs/tags/v}
+        VERSION=${{ github.ref_name }}
+        VERSION=${VERSION#v}
 
         # Update PKGBUILD version
-        sed -i "s/pkgver=.*/pkgver=$VERSION/" PKGBUILD
+        sed -i "s/^pkgver=.*/pkgver=$VERSION/" PKGBUILD
 
         # Update source URL with new version
-        sed -i "s|source=.*|source=\"https://github.com/SaintFore/LeetCodeCLI/archive/refs/tags/v$VERSION.tar.gz\"|" PKGBUILD
+        sed -i "s|^source=.*|source=(\"https://github.com/SaintFore/LeetCodeCLI/archive/refs/tags/v$VERSION.tar.gz\")|" PKGBUILD
 
-        # Generate .SRCINFO using a simpler approach
-        # Create a complete .SRCINFO file manually since we can't use makepkg in Docker
-        echo "pkgbase = leetcode-fsrs-cli" > .SRCINFO
-        echo "\tpkgdesc = A CLI tool for LeetCode practice using FSRS spaced repetition algorithm" >> .SRCINFO
-        echo "\tpkgver = $VERSION" >> .SRCINFO
-        echo "\tpkgrel = 1" >> .SRCINFO
-        echo "\turl = https://github.com/SaintFore/LeetCodeCLI" >> .SRCINFO
-        echo "\tarch = any" >> .SRCINFO
-        echo "\tlicense = MIT" >> .SRCINFO
-        echo "\tmakedepends = python-setuptools" >> .SRCINFO
-        echo "\tdepends = python" >> .SRCINFO
-        echo "\tdepends = python-click" >> .SRCINFO
-        echo "\tdepends = python-requests" >> .SRCINFO
-        echo "\toptdepends = git: for version control integration" >> .SRCINFO
-        echo "\tprovides = leetcode-fsrs-cli" >> .SRCINFO
-        echo "\tconflicts = leetcode-fsrs-cli" >> .SRCINFO
-        echo "\treplaces = leetcode-fsrs-cli" >> .SRCINFO
-        echo "\tbackup = etc/leetcode-fsrs-cli/config.json" >> .SRCINFO
-        echo "\tsource = https://github.com/SaintFore/LeetCodeCLI/archive/refs/tags/v$VERSION.tar.gz" >> .SRCINFO
-        echo "\tsha256sums = 8d75c0c035dca6981ad4b4ef99fccfa6515c112ea514bedd7c29c0387e5101dd" >> .SRCINFO
-        echo "" >> .SRCINFO
-        echo "pkgname = leetcode-fsrs-cli" >> .SRCINFO
+        # Generate .SRCINFO using Docker and makepkg
+        docker run --rm -v $(pwd):/build archlinux:latest bash -c "
+          cd /build && \\
+          pacman -Sy --noconfirm base-devel && \\
+          useradd -m builder && \\
+          chown -R builder:builder /build && \\
+          su builder -c 'makepkg --printsrcinfo > .SRCINFO'
+        "
+
+        # Verify generated .SRCINFO
+        echo "Generated .SRCINFO:"
+        cat .SRCINFO | head -20
 
     - name: Commit and push main package
       run: |
         cd aur-repo-main
+        VERSION=${{ github.ref_name }}
+        VERSION=${VERSION#v}
+
         git config user.name "GitHub Actions"
         git config user.email "actions@github.com"
+
+        # Check if there are changes
+        if git diff --quiet PKGBUILD .SRCINFO; then
+          echo "No changes detected"
+          exit 0
+        fi
+
         git add PKGBUILD .SRCINFO
         git commit -m "Update to version $VERSION"
         git push origin master
