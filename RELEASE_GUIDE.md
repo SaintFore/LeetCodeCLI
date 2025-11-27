@@ -45,7 +45,7 @@ yay -S leetcode-fsrs-cli
 
 ```bash
 # 克隆仓库
-git clone https://github.com/your-username/leetcode-fsrs-cli.git
+git clone https://github.com/your-username/LeetCodeCLI.git
 cd leetcode-fsrs-cli
 
 # 安装依赖和包
@@ -65,7 +65,7 @@ pip install leetcode-fsrs-cli
 
 ### 步骤1: 创建GitHub仓库
 
-1. 在GitHub上创建新仓库：`leetcode-fsrs-cli`
+1. 在GitHub上创建新仓库：`LeetCodeCLI`
 2. 设置仓库为public
 3. 添加描述："A CLI tool for LeetCode practice using FSRS spaced repetition algorithm"
 
@@ -76,7 +76,7 @@ git init
 git add .
 git commit -m "Initial release: LeetCode FSRS CLI v1.0.0"
 git branch -M main
-git remote add origin https://github.com/your-username/leetcode-fsrs-cli.git
+git remote add origin https://github.com/your-username/LeetCodeCLI.git
 git push -u origin main
 ```
 

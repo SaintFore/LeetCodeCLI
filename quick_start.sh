@@ -20,17 +20,18 @@ fi
 echo "📦 安装依赖..."
 pip install -r requirements.txt
 
-echo "🔧 初始化项目..."
-python main.py init
+echo "🔧 安装包..."
+pip install .
 
 echo ""
 echo "✅ 安装完成！"
 echo ""
 echo "🎯 开始使用:"
-echo "   python main.py practice    # 开始练习"
-echo "   python main.py stats       # 查看统计"
-echo "   python main.py list        # 列出题目"
+echo "   leetcode-fsrs init        # 初始化项目"
+echo "   leetcode-fsrs practice    # 开始练习"
+echo "   leetcode-fsrs stats       # 查看统计"
+echo "   leetcode-fsrs list        # 列出题目"
 echo ""
 echo "📖 更多命令:"
-echo "   python main.py --help"
+echo "   leetcode-fsrs --help"
 echo ""

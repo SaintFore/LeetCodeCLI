@@ -122,6 +122,21 @@ dmypy.json
 data/
 *.json
 
+# Package files and build artifacts
+*.pkg.tar.zst
+*.tar.gz
+pkg/
+src/
+
+# Python build artifacts
+build/
+dist/
+*.egg-info/
+__pycache__/
+
+# AUR repository (should be managed separately)
+aur-repo/
+
 # IDE
 .vscode/
 .idea/

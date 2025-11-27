@@ -24,10 +24,14 @@ yay -S leetcode-fsrs-cli
 git clone https://github.com/SaintFore/LeetCodeCLI.git
 cd LeetCodeCLI
 
-# 安装依赖
-pip install -r requirements.txt
+# 安装包 (会自动安装依赖)
 pip install .
+
+# 或开发模式安装
+pip install -e .
 ```
+
+**注意**: 当前GitHub仓库名为 `LeetCodeCLI`，但包名为 `leetcode-fsrs-cli`
 
 ### 使用方法
 
