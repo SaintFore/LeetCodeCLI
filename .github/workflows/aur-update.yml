@@ -51,25 +51,23 @@ jobs:
 
         # Generate .SRCINFO using a simpler approach
         # Create a basic .SRCINFO file manually since we can't use makepkg in Docker
-        cat > .SRCINFO << EOF
-pkgbase = leetcode-fsrs-cli-bin
-	pkgdesc = A CLI tool for LeetCode practice using FSRS spaced repetition algorithm (binary version with minimal dependencies)
-	pkgver = $VERSION
-	pkgrel = 1
-	url = https://github.com/SaintFore/LeetCodeCLI
-	arch = any
-	license = MIT
-	depends = python
-	depends = python-click
-	depends = python-requests
-	provides = leetcode-fsrs-cli
-	conflicts = leetcode-fsrs-cli
-	replaces = leetcode-fsrs-cli
-	source = v$VERSION.tar.gz::https://github.com/SaintFore/LeetCodeCLI/archive/refs/tags/v$VERSION.tar.gz
-	sha256sums = 8d75c0c035dca6981ad4b4ef99fccfa6515c112ea514bedd7c29c0387e5101dd
-
-pkgname = leetcode-fsrs-cli-bin
-EOF
+        echo "pkgbase = leetcode-fsrs-cli-bin" > .SRCINFO
+        echo "\tpkgdesc = A CLI tool for LeetCode practice using FSRS spaced repetition algorithm (binary version with minimal dependencies)" >> .SRCINFO
+        echo "\tpkgver = $VERSION" >> .SRCINFO
+        echo "\tpkgrel = 1" >> .SRCINFO
+        echo "\turl = https://github.com/SaintFore/LeetCodeCLI" >> .SRCINFO
+        echo "\tarch = any" >> .SRCINFO
+        echo "\tlicense = MIT" >> .SRCINFO
+        echo "\tdepends = python" >> .SRCINFO
+        echo "\tdepends = python-click" >> .SRCINFO
+        echo "\tdepends = python-requests" >> .SRCINFO
+        echo "\tprovides = leetcode-fsrs-cli" >> .SRCINFO
+        echo "\tconflicts = leetcode-fsrs-cli" >> .SRCINFO
+        echo "\treplaces = leetcode-fsrs-cli" >> .SRCINFO
+        echo "\tsource = v$VERSION.tar.gz::https://github.com/SaintFore/LeetCodeCLI/archive/refs/tags/v$VERSION.tar.gz" >> .SRCINFO
+        echo "\tsha256sums = 8d75c0c035dca6981ad4b4ef99fccfa6515c112ea514bedd7c29c0387e5101dd" >> .SRCINFO
+        echo "" >> .SRCINFO
+        echo "pkgname = leetcode-fsrs-cli-bin" >> .SRCINFO
 
     - name: Commit and push binary package
       run: |
@@ -128,28 +126,26 @@ EOF
 
         # Generate .SRCINFO using a simpler approach
         # Create a basic .SRCINFO file manually since we can't use makepkg in Docker
-        cat > .SRCINFO << EOF
-pkgbase = leetcode-fsrs-cli
-	pkgdesc = A CLI tool for LeetCode practice using FSRS spaced repetition algorithm
-	pkgver = $VERSION
-	pkgrel = 1
-	url = https://github.com/SaintFore/LeetCodeCLI
-	arch = any
-	license = MIT
-	depends = python
-	depends = python-click
-	depends = python-requests
-	optdepends = git: for version control integration
-	makedepends = python-setuptools
-	provides = leetcode-fsrs-cli
-	conflicts = leetcode-fsrs-cli
-	replaces = leetcode-fsrs-cli
-	backup = etc/leetcode-fsrs-cli/config.json
-	source = https://github.com/SaintFore/LeetCodeCLI/archive/refs/tags/v$VERSION.tar.gz
-	sha256sums = 8d75c0c035dca6981ad4b4ef99fccfa6515c112ea514bedd7c29c0387e5101dd
-
-pkgname = leetcode-fsrs-cli
-EOF
+        echo "pkgbase = leetcode-fsrs-cli" > .SRCINFO
+        echo "\tpkgdesc = A CLI tool for LeetCode practice using FSRS spaced repetition algorithm" >> .SRCINFO
+        echo "\tpkgver = $VERSION" >> .SRCINFO
+        echo "\tpkgrel = 1" >> .SRCINFO
+        echo "\turl = https://github.com/SaintFore/LeetCodeCLI" >> .SRCINFO
+        echo "\tarch = any" >> .SRCINFO
+        echo "\tlicense = MIT" >> .SRCINFO
+        echo "\tdepends = python" >> .SRCINFO
+        echo "\tdepends = python-click" >> .SRCINFO
+        echo "\tdepends = python-requests" >> .SRCINFO
+        echo "\toptdepends = git: for version control integration" >> .SRCINFO
+        echo "\tmakedepends = python-setuptools" >> .SRCINFO
+        echo "\tprovides = leetcode-fsrs-cli" >> .SRCINFO
+        echo "\tconflicts = leetcode-fsrs-cli" >> .SRCINFO
+        echo "\treplaces = leetcode-fsrs-cli" >> .SRCINFO
+        echo "\tbackup = etc/leetcode-fsrs-cli/config.json" >> .SRCINFO
+        echo "\tsource = https://github.com/SaintFore/LeetCodeCLI/archive/refs/tags/v$VERSION.tar.gz" >> .SRCINFO
+        echo "\tsha256sums = 8d75c0c035dca6981ad4b4ef99fccfa6515c112ea514bedd7c29c0387e5101dd" >> .SRCINFO
+        echo "" >> .SRCINFO
+        echo "pkgname = leetcode-fsrs-cli" >> .SRCINFO
 
     - name: Commit and push main package
       run: |
