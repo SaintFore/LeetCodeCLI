@@ -1,0 +1,24 @@
+pkgbase = leetcode-fsrs-cli
+	pkgdesc = A CLI tool for LeetCode practice using FSRS spaced repetition algorithm
+	pkgver = 1.0.0
+	pkgrel = 1
+	url = https://github.com/your-username/leetcode-fsrs-cli
+	arch = any
+	license = MIT
+	makedepends = python-setuptools
+	depends = python
+	depends = python-click
+	depends = python-requests
+	depends = python-pandas
+	depends = python-numpy
+	depends = python-rich
+	depends = python-tabulate
+	optdepends = git: for version control integration
+	provides = leetcode-fsrs-cli
+	conflicts = leetcode-fsrs-cli
+	replaces = leetcode-fsrs-cli
+	backup = etc/leetcode-fsrs-cli/config.json
+	source = leetcode-fsrs-cli-1.0.0.tar.gz
+	sha256sums = SKIP
+
+pkgname = leetcode-fsrs-cli
