@@ -49,12 +49,27 @@ jobs:
         # Update source URL with new version
         sed -i "s|source=.*|source=\"v$VERSION.tar.gz::https://github.com/SaintFore/LeetCodeCLI/archive/refs/tags/v$VERSION.tar.gz\"|" PKGBUILD
 
-        # Generate .SRCINFO using Docker with Arch Linux
-        docker run --rm -v $(pwd):/build archlinux:latest bash -c "
-          cd /build
-          pacman -Syu --noconfirm base-devel
-          makepkg --printsrcinfo > .SRCINFO
-        "
+        # Generate .SRCINFO using a simpler approach
+        # Create a basic .SRCINFO file manually since we can't use makepkg in Docker
+        cat > .SRCINFO << EOF
+pkgbase = leetcode-fsrs-cli-bin
+	pkgdesc = A CLI tool for LeetCode practice using FSRS spaced repetition algorithm (binary version with minimal dependencies)
+	pkgver = $VERSION
+	pkgrel = 1
+	url = https://github.com/SaintFore/LeetCodeCLI
+	arch = any
+	license = MIT
+	depends = python
+	depends = python-click
+	depends = python-requests
+	provides = leetcode-fsrs-cli
+	conflicts = leetcode-fsrs-cli
+	replaces = leetcode-fsrs-cli
+	source = v$VERSION.tar.gz::https://github.com/SaintFore/LeetCodeCLI/archive/refs/tags/v$VERSION.tar.gz
+	sha256sums = 8d75c0c035dca6981ad4b4ef99fccfa6515c112ea514bedd7c29c0387e5101dd
+
+pkgname = leetcode-fsrs-cli-bin
+EOF
 
     - name: Commit and push binary package
       run: |
@@ -111,12 +126,30 @@ jobs:
         # Update source URL with new version
         sed -i "s|source=.*|source=\"https://github.com/SaintFore/LeetCodeCLI/archive/refs/tags/v$VERSION.tar.gz\"|" PKGBUILD
 
-        # Generate .SRCINFO using Docker with Arch Linux
-        docker run --rm -v $(pwd):/build archlinux:latest bash -c "
-          cd /build
-          pacman -Syu --noconfirm base-devel
-          makepkg --printsrcinfo > .SRCINFO
-        "
+        # Generate .SRCINFO using a simpler approach
+        # Create a basic .SRCINFO file manually since we can't use makepkg in Docker
+        cat > .SRCINFO << EOF
+pkgbase = leetcode-fsrs-cli
+	pkgdesc = A CLI tool for LeetCode practice using FSRS spaced repetition algorithm
+	pkgver = $VERSION
+	pkgrel = 1
+	url = https://github.com/SaintFore/LeetCodeCLI
+	arch = any
+	license = MIT
+	depends = python
+	depends = python-click
+	depends = python-requests
+	optdepends = git: for version control integration
+	makedepends = python-setuptools
+	provides = leetcode-fsrs-cli
+	conflicts = leetcode-fsrs-cli
+	replaces = leetcode-fsrs-cli
+	backup = etc/leetcode-fsrs-cli/config.json
+	source = https://github.com/SaintFore/LeetCodeCLI/archive/refs/tags/v$VERSION.tar.gz
+	sha256sums = 8d75c0c035dca6981ad4b4ef99fccfa6515c112ea514bedd7c29c0387e5101dd
+
+pkgname = leetcode-fsrs-cli
+EOF
 
     - name: Commit and push main package
       run: |
