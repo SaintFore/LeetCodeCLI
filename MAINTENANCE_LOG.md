@@ -35,14 +35,15 @@
 - **实际需求**: AUR要求在推送前必须更新.SRCINFO文件
 
 #### 修复方案
-1. **添加Arch工具安装**: 在Ubuntu runner中安装wget和bsdtar
+1. **添加Arch工具安装**: 在Ubuntu runner中安装wget和libarchive-tools
 2. **使用Docker生成.SRCINFO**: 在Arch Linux容器中运行makepkg
 3. **移除错误注释**: 删除关于AUR自动处理.SRCINFO的错误说明
 
 #### 技术细节
 - **修复文件**: `.github/workflows/aur-update.yml`
-- **测试标签**: 创建v1.2.7标签触发修复后的工作流
-- **预期结果**: AUR包版本应该更新到v1.2.7
+- **测试标签**: 创建v1.2.7和v1.2.8标签测试修复
+- **包名修正**: 将bsdtar改为libarchive-tools (Ubuntu包名)
+- **预期结果**: AUR包版本应该更新到v1.2.8
 
 ### 2025-11-28: GitHub Actions自动更新和文档优化
 **维护者**: Claude Code AI Assistant
