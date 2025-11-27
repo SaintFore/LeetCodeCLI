@@ -23,10 +23,12 @@ jobs:
     - name: Test SSH connection
       run: |
         ssh-keyscan aur.archlinux.org >> ~/.ssh/known_hosts
+        echo "Testing SSH connection to AUR..."
         ssh -o StrictHostKeyChecking=no -T aur@aur.archlinux.org
 
     - name: Clone AUR binary repository
       run: |
+        echo "Cloning AUR binary repository..."
         git clone ssh://aur@aur.archlinux.org/leetcode-fsrs-cli-bin.git aur-repo-bin
 
     - name: Update binary package files
@@ -74,10 +76,12 @@ jobs:
     - name: Test SSH connection
       run: |
         ssh-keyscan aur.archlinux.org >> ~/.ssh/known_hosts
+        echo "Testing SSH connection to AUR..."
         ssh -o StrictHostKeyChecking=no -T aur@aur.archlinux.org
 
     - name: Clone AUR main repository
       run: |
+        echo "Cloning AUR main repository..."
         git clone ssh://aur@aur.archlinux.org/leetcode-fsrs-cli.git aur-repo-main
 
     - name: Update main package files
