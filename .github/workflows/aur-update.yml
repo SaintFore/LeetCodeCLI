@@ -23,7 +23,7 @@ jobs:
     - name: Test SSH connection
       run: |
         ssh-keyscan aur.archlinux.org >> ~/.ssh/known_hosts
-        ssh -o StrictHostKeyChecking=no -T aur@aur.archlinux.org || echo "SSH connection test completed"
+        ssh -o StrictHostKeyChecking=no -T aur@aur.archlinux.org
 
     - name: Clone AUR binary repository
       run: |
@@ -55,7 +55,7 @@ jobs:
         git config user.name "GitHub Actions"
         git config user.email "actions@github.com"
         git add PKGBUILD .SRCINFO
-        git commit -m "Update to version ${{ github.ref_name }}"
+        git commit -m "Update to version $VERSION"
         git push origin master
 
   update-aur-main:
@@ -74,7 +74,7 @@ jobs:
     - name: Test SSH connection
       run: |
         ssh-keyscan aur.archlinux.org >> ~/.ssh/known_hosts
-        ssh -o StrictHostKeyChecking=no -T aur@aur.archlinux.org || echo "SSH connection test completed"
+        ssh -o StrictHostKeyChecking=no -T aur@aur.archlinux.org
 
     - name: Clone AUR main repository
       run: |
@@ -105,5 +105,5 @@ jobs:
         git config user.name "GitHub Actions"
         git config user.email "actions@github.com"
         git add PKGBUILD .SRCINFO
-        git commit -m "Update to version ${{ github.ref_name }}"
+        git commit -m "Update to version $VERSION"
         git push origin master
