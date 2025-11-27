@@ -51,20 +51,20 @@
 **任务**: 修复.SRCINFO文件格式验证错误 "missing mandatory field: pkgver"
 
 #### 问题诊断
-- **根本原因**: 手动生成的.SRCINFO文件缺少必需的字段和格式
+- **根本原因**: 手动生成的.SRCINFO文件格式不正确，依赖字段位置错误
 - **验证错误**: AUR hook拒绝提交，提示缺少pkgver字段
-- **格式问题**: 生成的.SRCINFO文件不完整，缺少makedepends等字段
+- **格式问题**: 依赖字段(depends)应该在pkgname部分，而不是pkgbase部分
 
 #### 修复方案
-1. **完善.SRCINFO格式**: 添加所有必需的字段 (makedepends, optdepends, backup等)
-2. **匹配现有格式**: 确保新生成的.SRCINFO与AUR上现有文件格式一致
-3. **依赖清理**: 移除已删除的依赖项 (pandas, numpy, rich, tabulate)
+1. **修正.SRCINFO结构**: 将depends字段移动到pkgname部分
+2. **遵循AUR规范**: 确保字段按照正确顺序排列
+3. **完整格式**: 包含所有必需字段 (pkgbase, pkgname, depends等)
 
 #### 技术细节
 - **修复文件**: `.github/workflows/aur-update.yml`
-- **测试标签**: 创建v1.3.1标签测试修复
-- **依赖优化**: 从6个依赖减少到2个必需依赖
-- **预期结果**: AUR包版本应该成功更新到v1.3.1
+- **测试标签**: 创建v1.3.1和v1.3.2标签测试修复
+- **格式修正**: 依赖字段从pkgbase移动到pkgname部分
+- **预期结果**: AUR包版本应该成功更新到v1.3.2
 
 ### 2025-11-28: GitHub Actions自动更新和文档优化
 **维护者**: Claude Code AI Assistant
