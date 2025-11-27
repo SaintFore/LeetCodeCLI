@@ -1,10 +1,10 @@
-# Maintainer: Julien <your-email@example.com>
+# Maintainer: SaintFore <saintfore@example.com>
 pkgname=leetcode-fsrs-cli
 pkgver=1.0.0
 pkgrel=1
 pkgdesc="A CLI tool for LeetCode practice using FSRS spaced repetition algorithm"
 arch=('any')
-url="https://github.com/your-username/leetcode-fsrs-cli"
+url="https://github.com/SaintFore/LeetCodeCLI"
 license=('MIT')
 depends=('python' 'python-click' 'python-requests' 'python-pandas' 'python-numpy' 'python-rich' 'python-tabulate')
 optdepends=('git: for version control integration')
@@ -14,16 +14,16 @@ conflicts=('leetcode-fsrs-cli')
 replaces=('leetcode-fsrs-cli')
 backup=('etc/leetcode-fsrs-cli/config.json')
 
-source=("$pkgname-$pkgver.tar.gz")
+source=("https://github.com/SaintFore/LeetCodeCLI/archive/refs/tags/v$pkgver.tar.gz")
 sha256sums=('SKIP')
 
 build() {
-  cd "$pkgname-$pkgver"
+  cd "LeetCodeCLI-$pkgver"
   python setup.py build
 }
 
 package() {
-  cd "$pkgname-$pkgver"
+  cd "LeetCodeCLI-$pkgver"
   python setup.py install --root="$pkgdir" --optimize=1 --skip-build
 
   # Install license
