@@ -49,19 +49,30 @@ jobs:
         # Update source URL with new version
         sed -i "s|^source=.*|source=(\"https://github.com/SaintFore/LeetCodeCLI/archive/refs/tags/v$VERSION.tar.gz\")|" PKGBUILD
 
-        # Generate .SRCINFO using Docker and makepkg
+        # Generate .SRCINFO using Docker and makepkg with updpkgsums
         docker run --rm -v $(pwd):/build archlinux:latest bash -c "
-          cd /build && \\
-          pacman -Sy --noconfirm base-devel && \\
-          useradd -m builder && \\
-          chown -R builder:builder /build && \\
+          set -e
+          cd /build
+
+          # Install dependencies including pacman-contrib for updpkgsums
+          pacman -Sy --noconfirm base-devel pacman-contrib
+
+          # 🔥 关键: 使用 updpkgsums 自动更新校验和
+          echo 'Running updpkgsums to update SHA256 checksums...'
+          updpkgsums
+
+          # Generate .SRCINFO
+          useradd -m builder
+          chown -R builder:builder /build
           su builder -c 'makepkg --printsrcinfo > .SRCINFO'
         "
 
         # 🔥 关键:修复Docker创建的文件的权限
         sudo chown -R $(id -u):$(id -g) .
 
-        # Verify generated .SRCINFO
+        # Verify generated .SRCINFO and updated checksums
+        echo "Updated PKGBUILD checksums:"
+        grep "sha256sums=" PKGBUILD
         echo "Generated .SRCINFO:"
         cat .SRCINFO | head -20
 
@@ -130,19 +141,30 @@ jobs:
         # Update source URL with new version
         sed -i "s|^source=.*|source=(\"https://github.com/SaintFore/LeetCodeCLI/archive/refs/tags/v$VERSION.tar.gz\")|" PKGBUILD
 
-        # Generate .SRCINFO using Docker and makepkg
+        # Generate .SRCINFO using Docker and makepkg with updpkgsums
         docker run --rm -v $(pwd):/build archlinux:latest bash -c "
-          cd /build && \\
-          pacman -Sy --noconfirm base-devel && \\
-          useradd -m builder && \\
-          chown -R builder:builder /build && \\
+          set -e
+          cd /build
+
+          # Install dependencies including pacman-contrib for updpkgsums
+          pacman -Sy --noconfirm base-devel pacman-contrib
+
+          # 🔥 关键: 使用 updpkgsums 自动更新校验和
+          echo 'Running updpkgsums to update SHA256 checksums...'
+          updpkgsums
+
+          # Generate .SRCINFO
+          useradd -m builder
+          chown -R builder:builder /build
           su builder -c 'makepkg --printsrcinfo > .SRCINFO'
         "
 
         # 🔥 关键:修复Docker创建的文件的权限
         sudo chown -R $(id -u):$(id -g) .
 
-        # Verify generated .SRCINFO
+        # Verify generated .SRCINFO and updated checksums
+        echo "Updated PKGBUILD checksums:"
+        grep "sha256sums=" PKGBUILD
         echo "Generated .SRCINFO:"
         cat .SRCINFO | head -20
 

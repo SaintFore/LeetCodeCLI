@@ -155,6 +155,26 @@
 - **二进制版**: leetcode-fsrs-cli-bin (零依赖)
 - **依赖优化**: 从6个依赖减少到2个
 
+### 2025-11-28: 修复SHA256校验和不匹配问题
+**维护者**: Claude Code AI Assistant
+**任务**: 修复GitHub Actions工作流中的SHA256校验和验证失败问题
+
+#### 问题诊断
+- **根本原因**: PKGBUILD文件中的SHA256校验和硬编码，版本更新时未自动更新
+- **错误表现**: `makepkg` 验证失败，提示SHA256校验和不匹配
+- **影响**: AUR包构建失败，无法自动更新到新版本
+
+#### 修复方案
+1. **使用updpkgsums命令**: 在Docker容器中安装`pacman-contrib`包
+2. **自动校验和更新**: 使用`updpkgsums`自动下载源文件并计算新的SHA256
+3. **工作流优化**: 更新`.github/workflows/aur-update.yml`，在生成.SRCINFO前先更新校验和
+
+#### 技术细节
+- **修复文件**: `.github/workflows/aur-update.yml`
+- **关键命令**: `updpkgsums` (自动更新PKGBUILD中的sha256sums)
+- **依赖添加**: 安装`pacman-contrib`包
+- **验证机制**: 添加校验和验证输出，便于调试
+
 ### 2025-11-28: 项目文档重构和AUR发布
 **维护者**: Claude Code AI Assistant
 **任务**: 重构项目文档，发布到AUR，添加AI友好的维护记录
