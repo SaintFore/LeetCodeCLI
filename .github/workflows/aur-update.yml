@@ -58,6 +58,9 @@ jobs:
           su builder -c 'makepkg --printsrcinfo > .SRCINFO'
         "
 
+        # 🔥 关键:修复Docker创建的文件的权限
+        sudo chown -R $(id -u):$(id -g) .
+
         # Verify generated .SRCINFO
         echo "Generated .SRCINFO:"
         cat .SRCINFO | head -20
@@ -135,6 +138,9 @@ jobs:
           chown -R builder:builder /build && \\
           su builder -c 'makepkg --printsrcinfo > .SRCINFO'
         "
+
+        # 🔥 关键:修复Docker创建的文件的权限
+        sudo chown -R $(id -u):$(id -g) .
 
         # Verify generated .SRCINFO
         echo "Generated .SRCINFO:"
