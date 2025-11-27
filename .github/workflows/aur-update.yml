@@ -34,7 +34,7 @@ jobs:
     - name: Install Arch tools
       run: |
         sudo apt-get update
-        sudo apt-get install -y wget bsdtar
+        sudo apt-get install -y wget libarchive-tools
 
     - name: Update binary package files
       run: |
@@ -92,7 +92,7 @@ jobs:
     - name: Install Arch tools
       run: |
         sudo apt-get update
-        sudo apt-get install -y wget bsdtar
+        sudo apt-get install -y wget libarchive-tools
 
     - name: Update main package files
       run: |
