@@ -57,13 +57,15 @@ jobs:
           # Install dependencies including pacman-contrib for updpkgsums
           pacman -Sy --noconfirm base-devel pacman-contrib
 
-          # 🔥 关键: 使用 updpkgsums 自动更新校验和
-          echo 'Running updpkgsums to update SHA256 checksums...'
-          updpkgsums
-
-          # Generate .SRCINFO
+          # Create non-root user for makepkg operations
           useradd -m builder
           chown -R builder:builder /build
+
+          # 🔥 关键: 使用 updpkgsums 自动更新校验和 (以builder用户运行)
+          echo 'Running updpkgsums to update SHA256 checksums...'
+          su builder -c 'updpkgsums'
+
+          # Generate .SRCINFO
           su builder -c 'makepkg --printsrcinfo > .SRCINFO'
         "
 
@@ -149,13 +151,15 @@ jobs:
           # Install dependencies including pacman-contrib for updpkgsums
           pacman -Sy --noconfirm base-devel pacman-contrib
 
-          # 🔥 关键: 使用 updpkgsums 自动更新校验和
-          echo 'Running updpkgsums to update SHA256 checksums...'
-          updpkgsums
-
-          # Generate .SRCINFO
+          # Create non-root user for makepkg operations
           useradd -m builder
           chown -R builder:builder /build
+
+          # 🔥 关键: 使用 updpkgsums 自动更新校验和 (以builder用户运行)
+          echo 'Running updpkgsums to update SHA256 checksums...'
+          su builder -c 'updpkgsums'
+
+          # Generate .SRCINFO
           su builder -c 'makepkg --printsrcinfo > .SRCINFO'
         "
 
