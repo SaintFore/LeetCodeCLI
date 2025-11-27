@@ -50,7 +50,7 @@ jobs:
         sed -i "s|source=.*|source=\"v$VERSION.tar.gz::https://github.com/SaintFore/LeetCodeCLI/archive/refs/tags/v$VERSION.tar.gz\"|" PKGBUILD
 
         # Generate .SRCINFO using a simpler approach
-        # Create a basic .SRCINFO file manually since we can't use makepkg in Docker
+        # Create a complete .SRCINFO file manually since we can't use makepkg in Docker
         echo "pkgbase = leetcode-fsrs-cli-bin" > .SRCINFO
         echo "\tpkgdesc = A CLI tool for LeetCode practice using FSRS spaced repetition algorithm (binary version with minimal dependencies)" >> .SRCINFO
         echo "\tpkgver = $VERSION" >> .SRCINFO
@@ -58,12 +58,15 @@ jobs:
         echo "\turl = https://github.com/SaintFore/LeetCodeCLI" >> .SRCINFO
         echo "\tarch = any" >> .SRCINFO
         echo "\tlicense = MIT" >> .SRCINFO
+        echo "\tmakedepends = python-setuptools" >> .SRCINFO
         echo "\tdepends = python" >> .SRCINFO
         echo "\tdepends = python-click" >> .SRCINFO
         echo "\tdepends = python-requests" >> .SRCINFO
+        echo "\toptdepends = git: for version control integration" >> .SRCINFO
         echo "\tprovides = leetcode-fsrs-cli" >> .SRCINFO
         echo "\tconflicts = leetcode-fsrs-cli" >> .SRCINFO
         echo "\treplaces = leetcode-fsrs-cli" >> .SRCINFO
+        echo "\tbackup = etc/leetcode-fsrs-cli/config.json" >> .SRCINFO
         echo "\tsource = v$VERSION.tar.gz::https://github.com/SaintFore/LeetCodeCLI/archive/refs/tags/v$VERSION.tar.gz" >> .SRCINFO
         echo "\tsha256sums = 8d75c0c035dca6981ad4b4ef99fccfa6515c112ea514bedd7c29c0387e5101dd" >> .SRCINFO
         echo "" >> .SRCINFO
@@ -125,7 +128,7 @@ jobs:
         sed -i "s|source=.*|source=\"https://github.com/SaintFore/LeetCodeCLI/archive/refs/tags/v$VERSION.tar.gz\"|" PKGBUILD
 
         # Generate .SRCINFO using a simpler approach
-        # Create a basic .SRCINFO file manually since we can't use makepkg in Docker
+        # Create a complete .SRCINFO file manually since we can't use makepkg in Docker
         echo "pkgbase = leetcode-fsrs-cli" > .SRCINFO
         echo "\tpkgdesc = A CLI tool for LeetCode practice using FSRS spaced repetition algorithm" >> .SRCINFO
         echo "\tpkgver = $VERSION" >> .SRCINFO
@@ -133,11 +136,11 @@ jobs:
         echo "\turl = https://github.com/SaintFore/LeetCodeCLI" >> .SRCINFO
         echo "\tarch = any" >> .SRCINFO
         echo "\tlicense = MIT" >> .SRCINFO
+        echo "\tmakedepends = python-setuptools" >> .SRCINFO
         echo "\tdepends = python" >> .SRCINFO
         echo "\tdepends = python-click" >> .SRCINFO
         echo "\tdepends = python-requests" >> .SRCINFO
         echo "\toptdepends = git: for version control integration" >> .SRCINFO
-        echo "\tmakedepends = python-setuptools" >> .SRCINFO
         echo "\tprovides = leetcode-fsrs-cli" >> .SRCINFO
         echo "\tconflicts = leetcode-fsrs-cli" >> .SRCINFO
         echo "\treplaces = leetcode-fsrs-cli" >> .SRCINFO
