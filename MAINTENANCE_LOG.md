@@ -89,6 +89,26 @@
 - **用户权限**: 创建非root用户builder避免权限问题
 - **预期结果**: AUR包版本应该成功更新到v1.3.4
 
+### 2025-11-28: Docker权限问题修复
+**维护者**: Claude Code AI Assistant
+**任务**: 修复GitHub Actions工作流中的Docker权限问题
+
+#### 问题诊断
+- **根本原因**: Docker容器创建的文件所有者是root用户，但GitHub Actions需要以普通用户权限访问
+- **错误表现**: `error: could not lock config file .git/config: Permission denied`
+- **影响**: 无法进行git操作，导致AUR包更新失败
+
+#### 修复方案
+1. **添加权限修复命令**: 在Docker执行后添加 `sudo chown -R $(id -u):$(id -g) .`
+2. **文件所有权转移**: 将Docker创建的文件所有权转移回当前用户
+3. **测试验证**: 创建v1.3.5标签测试修复效果
+
+#### 技术细节
+- **修复文件**: `.github/workflows/aur-update.yml`
+- **测试标签**: 创建v1.3.5标签测试修复
+- **关键命令**: `sudo chown -R $(id -u):$(id -g) .`
+- **预期结果**: AUR包版本应该成功更新到v1.3.5
+
 ### 2025-11-28: GitHub Actions自动更新和文档优化
 **维护者**: Claude Code AI Assistant
 **任务**: 配置GitHub Actions自动更新AUR包，优化文档结构
