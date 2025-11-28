@@ -193,10 +193,12 @@ class SyncManager:
                     continue
                     
                 # 检查本地是否已存在该题目 (通过 URL 匹配)
-                # 这是一个简单的检查，不够严谨，但能减少请求
+                # 使用严格匹配: url 必须以 /slug/ 结尾
                 exists = False
                 for q in local_questions.values():
-                    if slug in q.url:
+                    # 假设 q.url 是 https://leetcode.com/problems/{slug}/
+                    # 我们检查它是否以 /{slug}/ 结尾
+                    if q.url.rstrip('/').endswith(f"/{slug}"):
                         exists = True
                         break
                 
@@ -222,7 +224,7 @@ class SyncManager:
                 question = Question(
                     id=qid,
                     title=detail.get("title"),
-                    difficulty=detail.get("difficulty") or "Unknown",
+                    difficulty=(detail.get("difficulty") or "Unknown").lower(),
                     tags=detail.get("tags") or [],
                     url=f"https://leetcode.com/problems/{slug}/",
                     content=detail.get("content") or ""

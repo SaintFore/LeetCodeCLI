@@ -189,7 +189,12 @@ class QuestionManager:
         """
         counts = {"easy": 0, "medium": 0, "hard": 0}
         for question in self.questions.values():
-            counts[question.difficulty] += 1
+            diff = question.difficulty.lower()
+            if diff in counts:
+                counts[diff] += 1
+            else:
+                # Handle unknown difficulty if necessary, or just ignore
+                pass
         return counts
 
     def import_from_file(self, file_path: str) -> int:

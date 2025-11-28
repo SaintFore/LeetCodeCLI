@@ -510,6 +510,13 @@ leetcode-fsrs --help
 
 ---
 
-**维护记录更新**: 2025-11-28 by Claude Code AI Assistant
+- **Bug修复 (v1.6.4)**:
+  - 修复 `stats` 命令因难度大小写不匹配导致的 `KeyError`
+  - 修复 `sync` 命令因 URL 模糊匹配导致题目识别错误 (如 141 误判为 142)
+  - 修复 `sync` 命令中 "Unchanged" 计数不准确的问题
+
+---
+
+**维护记录更新**: 2025-11-28 by Antigravity AI Assistant
 
 这个文档将持续更新，记录所有重要的维护活动和项目变更。
