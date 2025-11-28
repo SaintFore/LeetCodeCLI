@@ -17,12 +17,12 @@ LeetCode FSRS CLI - 基于FSRS算法的LeetCode刷题工具
 
 维护信息:
 - 项目状态: 已完成并发布到AUR
-- 版本: 1.0.0
+- 版本: 1.4.0
 - 最后维护: 2025-11-28
 - 维护记录: 详见项目根目录的MAINTENANCE_LOG.md
 """
 
-__version__ = "1.0.0"
+__version__ = "1.4.0"
 __author__ = "SaintFore"
 __email__ = "saintfore@example.com"
 
