@@ -1,8 +1,10 @@
 name: Update AUR Packages
 
 on:
-  release:
-    types: [published]
+  workflow_run:
+    workflows: ["Build and Release Binary"]
+    types:
+      - completed
   workflow_dispatch:
 
 jobs:
@@ -35,16 +37,24 @@ jobs:
         sudo apt-get update
         sudo apt-get install -y wget libarchive-tools
 
+    - name: Download version artifact
+      uses: actions/download-artifact@v4
+      with:
+        name: version
+        run-id: ${{ github.event.workflow_run.id }}
+        github-token: ${{ secrets.GITHUB_TOKEN }}
+
     - name: Update binary package files
       run: |
+        # Read version from artifact
+        VERSION=$(cat version.txt)
+        echo "Updating to version $VERSION"
+        
         # Copy PKGBUILD template
         cp aur-assets/PKGBUILD.bin aur-repo-bin/PKGBUILD
         
         # Update version in AUR binary repository
         cd aur-repo-bin
-        VERSION=${{ github.event.release.tag_name }}
-        VERSION=${VERSION#v}
-        echo "Updating to version $VERSION"
 
         # Update PKGBUILD version
         sed -i "s/^pkgver=.*/pkgver=$VERSION/" PKGBUILD
@@ -133,16 +143,25 @@ jobs:
         sudo apt-get update
         sudo apt-get install -y wget libarchive-tools
 
+    - name: Download version artifact
+      uses: actions/download-artifact@v4
+      with:
+        name: version
+        run-id: ${{ github.event.workflow_run.id }}
+        github-token: ${{ secrets.GITHUB_TOKEN }}
+
     - name: Update main package files
       run: |
+        # Read version from artifact
+        VERSION=$(cat version.txt)
+        echo "Updating to version $VERSION"
+        
         # Copy updated files
         echo "Copying PKGBUILD file..."
         cp aur-assets/PKGBUILD aur-repo-main/
 
         # Update version
         cd aur-repo-main
-        VERSION=${{ github.event.release.tag_name }}
-        VERSION=${VERSION#v}
 
         # Update PKGBUILD version
         sed -i "s/^pkgver=.*/pkgver=$VERSION/" PKGBUILD

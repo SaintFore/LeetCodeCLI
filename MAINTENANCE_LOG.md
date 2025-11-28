@@ -482,7 +482,8 @@ leetcode-fsrs --help
 - **CI/CD**:
   - 新增 `release.yml` 自动构建并发布 Linux 二进制文件
   - 修复 `aur-update.yml` 以支持 `leetcode-fsrs-cli-bin` 使用预编译二进制
-  - 优化 AUR 更新流程，改为由 Release 发布事件触发
+  - 优化 AUR 更新流程，改为由 `release.yml` 完成后触发 (`workflow_run`)，解决 Token 权限问题
+  - 使用 Artifact 传递版本号，确保工作流间版本一致性
 
 ---
 
