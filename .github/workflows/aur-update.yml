@@ -166,8 +166,24 @@ jobs:
         # Update PKGBUILD version
         sed -i "s/^pkgver=.*/pkgver=$VERSION/" PKGBUILD
 
-        # Update source URL with new version
-        sed -i "s|^source=.*|source=(\"https://github.com/SaintFore/LeetCodeCLI/archive/refs/tags/v$VERSION.tar.gz\")|" PKGBUILD
+        # Update source URL with new version (preserving filename:: prefix if present, or adding it)
+        # Actually, since we copy the template which HAS the prefix, we just need to ensure we replace the URL part correctly
+        # The template has: source=("${pkgname}-${pkgver}::https://...")
+        # We don't need to sed the source line anymore because it uses $pkgver variable!
+        # Wait, the template uses $pkgver variable, so we DON'T need to sed the URL if it's dynamic.
+        # Let's check the template again.
+        # Template: source=("${pkgname}-${pkgver}::https://.../v$pkgver/...")
+        # So when we update pkgver, the source URL automatically updates!
+        # WE CAN REMOVE THE SED COMMAND FOR SOURCE URL in update-aur-bin!
+        
+        # But wait, update-aur-main uses a tarball source which might be different.
+        # Let's look at update-aur-bin job.
+        
+        # In update-aur-bin, we copy PKGBUILD.bin.
+        # PKGBUILD.bin has: source=("${pkgname}-${pkgver}::.../v$pkgver/...")
+        # We update pkgver=...
+        # So we DO NOT need to sed the source URL in update-aur-bin anymore!
+        # Removing the sed command.
 
         # Generate .SRCINFO using Docker and makepkg with updpkgsums
         docker run --rm -v $(pwd):/build archlinux:latest bash -c "

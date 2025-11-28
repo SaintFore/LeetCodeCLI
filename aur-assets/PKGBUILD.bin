@@ -11,7 +11,7 @@ provides=('leetcode-fsrs-cli')
 conflicts=('leetcode-fsrs-cli')
 replaces=('leetcode-fsrs-cli')
 
-source=("https://github.com/SaintFore/LeetCodeCLI/releases/download/v$pkgver/leetcode-fsrs-linux-x86_64"
+source=("${pkgname}-${pkgver}::https://github.com/SaintFore/LeetCodeCLI/releases/download/v$pkgver/leetcode-fsrs-linux-x86_64"
         "https://raw.githubusercontent.com/SaintFore/LeetCodeCLI/v$pkgver/LICENSE"
         "https://raw.githubusercontent.com/SaintFore/LeetCodeCLI/v$pkgver/README.md")
 sha256sums=('SKIP' 'SKIP' 'SKIP')
