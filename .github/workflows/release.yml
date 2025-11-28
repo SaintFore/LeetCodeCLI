@@ -34,7 +34,7 @@ jobs:
           pyinstaller --onefile \
             --name leetcode-fsrs \
             --add-data "leetcode_fsrs_cli/data:leetcode_fsrs_cli/data" \
-            leetcode_fsrs_cli/cli.py
+            run_cli.py
           
           # Rename binary to include version and arch
           VERSION=${GITHUB_REF#refs/tags/v}
