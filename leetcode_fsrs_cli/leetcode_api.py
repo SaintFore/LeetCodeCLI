@@ -103,7 +103,7 @@ class LeetCodeAPIClient:
         except Exception:
             return None
 
-    def get_user_problems(self, limit: int = 50) -> List[Dict[str, Any]]:
+    def get_user_problems(self, limit: int = 1000) -> List[Dict[str, Any]]:
         """
         获取用户已提交/已通过的题目（简化实现）
         返回列表，包含题目id、title、slug 等基本信息

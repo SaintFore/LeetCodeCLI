@@ -32,24 +32,7 @@ class LeetCodeFSRSCLI:
         
         self.scheduler = ReviewScheduler(self.fsrs)
 
-    def init_project(self):
-        """初始化项目"""
-        # 显示数据目录信息
-        data_dir = self.question_manager.data_dir
-        click.echo(f"📁 数据目录: {data_dir}")
-
-        # 创建默认配置
-        config = self.storage_manager.load_config()
-        self.storage_manager.save_config(config)
-
-        click.echo("\n✅ 项目初始化完成！")
-        click.echo("\n📝 后续步骤:")
-        click.echo("   1. 认证: leetcode-fsrs auth login")
-        click.echo("   2. 同步: leetcode-fsrs sync")
-        click.echo("   3. 练习: leetcode-fsrs practice")
-        click.echo(f"\n💾 数据保存在: {data_dir}")
-
-    def practice(self, limit: int = 20):
+    def practice(self, limit: int = 20, show_plan: bool = False):
         """开始练习"""
         # 获取到期的复习记录
         due_reviews = self.storage_manager.get_due_reviews()
@@ -88,21 +71,51 @@ class LeetCodeFSRSCLI:
             click.echo("❌ 没有可复习的题目！")
             return
 
+        if show_plan:
+            click.echo("📅 复习计划")
+            click.echo("=" * 40)
+            click.echo(f"待复习题目: {len(sessions)}")
+            click.echo()
+
+            for i, session in enumerate(sessions[:20], 1):  # 显示前20个
+                question = session.question
+                click.echo(f"{i}. {question.id}. {question.title}")
+                click.echo(f"   难度: {question.difficulty}")
+                click.echo(f"   优先级: {session.priority:.2f}")
+                click.echo()
+
+            if len(sessions) > 20:
+                click.echo(f"... 还有 {len(sessions) - 20} 题")
+            return
+
         click.echo(f"📚 今日复习计划 ({len(sessions)} 题):")
         if new_reviews:
             click.echo(f"   (包含 {len(new_reviews)} 个新题目)")
         click.echo("=" * 50)
+        click.pause("按任意键开始练习...")
 
         completed_count = 0
         for i, session in enumerate(sessions, 1):
+            click.clear()  # 清屏
             question = session.question
             review = session.review_record
 
-            click.echo(f"\n{i}. {question.id}. {question.title}")
-            click.echo(f"   难度: {question.difficulty}")
-            click.echo(f"   标签: {', '.join(question.tags)}")
-            click.echo(f"   稳定性: {review.stability:.2f}")
-            click.echo(f"   难度系数: {review.difficulty:.2f}")
+            click.echo(f"📊 进度: {completed_count}/{len(sessions)}")
+            click.echo("=" * 50)
+            click.echo(f"{question.id}. {question.title}")
+            click.echo(f"难度: {question.difficulty}")
+            click.echo(f"标签: {', '.join(question.tags)}")
+            click.echo(f"稳定性: {review.stability:.2f} | 难度系数: {review.difficulty:.2f}")
+            click.echo("-" * 50)
+            
+            if question.content:
+                # 显示题目内容摘要
+                content_preview = question.content[:500] + "..." if len(question.content) > 500 else question.content
+                click.echo(content_preview)
+                click.echo("-" * 50)
+
+            click.echo(f"链接: {question.url}")
+            click.echo("=" * 50)
 
             # 获取用户评分
             rating = self._get_user_rating()
@@ -115,13 +128,6 @@ class LeetCodeFSRSCLI:
             self.storage_manager.save_review_record(review)
 
             completed_count += 1
-
-            # 显示进度
-            progress = self.scheduler.calculate_review_progress(
-                sessions, completed_count
-            )
-            click.echo(f"\n📊 进度: {completed_count}/{len(sessions)} "
-                      f"({progress['completion_rate']:.1%})")
 
         click.echo(f"\n🎯 今日完成: {completed_count} 题")
 
@@ -177,33 +183,7 @@ class LeetCodeFSRSCLI:
         click.echo(f"   平均评分: {analytics['avg_rating']:.2f}")
         click.echo(f"   成功率: {analytics['success_rate']:.1%}")
 
-    def schedule(self):
-        """生成复习计划"""
-        due_reviews = self.storage_manager.get_due_reviews()
-        questions = {q.id: q for q in self.question_manager.list_questions()}
 
-        if not due_reviews:
-            click.echo("🎉 没有到期的复习题目！")
-            return
-
-        sessions = self.scheduler.generate_daily_review_plan(
-            due_reviews, questions, 20
-        )
-
-        click.echo("📅 复习计划")
-        click.echo("=" * 40)
-        click.echo(f"待复习题目: {len(sessions)}")
-        click.echo()
-
-        for i, session in enumerate(sessions[:10], 1):  # 只显示前10个
-            question = session.question
-            click.echo(f"{i}. {question.id}. {question.title}")
-            click.echo(f"   难度: {question.difficulty}")
-            click.echo(f"   优先级: {session.priority:.2f}")
-            click.echo()
-
-        if len(sessions) > 10:
-            click.echo(f"... 还有 {len(sessions) - 10} 题")
 
     def list_questions(self, difficulty: Optional[str] = None, tag: Optional[str] = None, status: Optional[str] = None):
         """列出题目"""
@@ -227,8 +207,9 @@ class LeetCodeFSRSCLI:
             click.echo("❌ 没有找到符合条件的题目")
             return
 
-        click.echo(f"📚 题目列表 ({len(questions)} 题)")
-        click.echo("=" * 60)
+        output = []
+        output.append(f"📚 题目列表 ({len(questions)} 题)")
+        output.append("=" * 60)
 
         for question in questions:
             review = self.storage_manager.get_review_record(question.id)
@@ -242,13 +223,15 @@ class LeetCodeFSRSCLI:
                 status_str = "✅ 已复习"
                 next_review_str = f"   下次复习: {review.next_review.strftime('%Y-%m-%d') if review.next_review else 'N/A'}"
 
-            click.echo(f"{question.id}. {question.title}")
-            click.echo(f"   难度: {question.difficulty}")
-            click.echo(f"   标签: {', '.join(question.tags)}")
-            click.echo(f"   状态: {status_str}")
+            output.append(f"{question.id}. {question.title}")
+            output.append(f"   难度: {question.difficulty}")
+            output.append(f"   标签: {', '.join(question.tags)}")
+            output.append(f"   状态: {status_str}")
             if next_review_str:
-                click.echo(next_review_str)
-            click.echo()
+                output.append(next_review_str)
+            output.append("")
+        
+        click.echo_via_pager("\n".join(output))
 
     def get_question_info(self, question_id: int):
         """显示题目详细信息"""
@@ -293,19 +276,16 @@ def cli(ctx):
     ctx.obj = LeetCodeFSRSCLI()
 
 
-@cli.command()
-def init():
-    """初始化项目"""
-    cli_obj = LeetCodeFSRSCLI()
-    cli_obj.init_project()
+
 
 
 @cli.command()
 @click.option('--limit', default=20, help='每日复习题目数量限制')
-def practice(limit):
+@click.option('--plan', is_flag=True, help='仅显示复习计划')
+def practice(limit, plan):
     """开始练习"""
     cli_obj = LeetCodeFSRSCLI()
-    cli_obj.practice(limit)
+    cli_obj.practice(limit, show_plan=plan)
 
 
 @cli.command()
@@ -315,11 +295,7 @@ def stats():
     cli_obj.stats()
 
 
-@cli.command()
-def schedule():
-    """生成复习计划"""
-    cli_obj = LeetCodeFSRSCLI()
-    cli_obj.schedule()
+
 
 
 @cli.command()

@@ -487,6 +487,12 @@ leetcode-fsrs --help
 - **Bug修复**:
   - 修复 `sync` 命令因使用截断的 Cookie 导致认证失败的问题
   - 修复 `auth login` 未保存用户名导致 `auth status` 显示 unknown 的问题
+- **CLI 改进**:
+  - 移除 `init` 和 `schedule` 命令，精简指令集
+  - `practice` 命令增加 `--plan` 选项查看复习计划
+  - `practice` 练习过程中自动清屏，优化视觉体验
+  - `list` 命令增加分页支持 (Pager)
+  - `sync` 命令默认同步数量提升至 1000，解决同步不全问题
 
 ---
 
