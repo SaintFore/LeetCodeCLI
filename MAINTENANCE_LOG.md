@@ -504,16 +504,21 @@ leetcode-fsrs --help
   - 新增存储管理模块单元测试 (`tests/test_storage.py`)
   - 新增调度器逻辑单元测试 (`tests/test_scheduler.py`)
   - 新增 CLI 交互流程单元测试 (`tests/test_cli.py`)
-- **Bug修复 (v1.6.3)**:
+- **Bug修复 (v1.6.2)**:
   - 修复 FSRS 算法权重数组缺失导致的 `IndexError` (通过单元测试发现)
   - 修复 FSRS 算法在 Rating=3 (Good) 时稳定性下降的逻辑问题
 
 ---
 
-- **Bug修复 (v1.6.4)**:
+- **Bug修复 (v1.6.3)**:
   - 修复 `stats` 命令因难度大小写不匹配导致的 `KeyError`
   - 修复 `sync` 命令因 URL 模糊匹配导致题目识别错误 (如 141 误判为 142)
   - 修复 `sync` 命令中 "Unchanged" 计数不准确的问题
+
+- **文档更新 (v1.6.3)**:
+  - 重构 `README.md`: 采用全新设计风格，增加徽章、ASCII 艺术感标题和清晰的排版
+  - 更新安装和使用说明，突出二进制包优势
+  - 更新 `practice` 命令默认限制说明 (20 -> 10)
 
 ---
 

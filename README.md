@@ -1,187 +1,146 @@
-# LeetCode FSRS CLI
+# 🧠 LeetCode FSRS CLI
 
-基于FSRS（Free Spaced Repetition Scheduler）记忆算法的LeetCode刷题CLI工具，通过科学的间隔重复算法帮助你高效刷题。
+> **科学刷题，拒绝遗忘。**
+> 基于 **FSRS (Free Spaced Repetition Scheduler)** 算法的下一代 LeetCode 刷题助手。
 
-[![AUR](https://img.shields.io/aur/version/leetcode-fsrs-cli)](https://aur.archlinux.org/packages/leetcode-fsrs-cli)
-[![AUR](https://img.shields.io/aur/version/leetcode-fsrs-cli-bin)](https://aur.archlinux.org/packages/leetcode-fsrs-cli-bin)
-[![License](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
-[![Version](https://img.shields.io/badge/version-1.6.2-blue.svg)](https://github.com/SaintFore/LeetCodeCLI/releases)
+[![AUR](https://img.shields.io/aur/version/leetcode-fsrs-cli?style=for-the-badge&color=blue)](https://aur.archlinux.org/packages/leetcode-fsrs-cli)
+[![AUR Binary](https://img.shields.io/aur/version/leetcode-fsrs-cli-bin?style=for-the-badge&color=orange&label=AUR%20BIN)](https://aur.archlinux.org/packages/leetcode-fsrs-cli-bin)
+[![Python](https://img.shields.io/badge/Python-3.8+-green?style=for-the-badge&logo=python)](https://www.python.org/)
+[![License](https://img.shields.io/badge/License-MIT-purple?style=for-the-badge)](LICENSE)
 
-## ✨ 特性概览
+---
 
-- **🎯 科学记忆算法**: 基于FSRS v4间隔重复算法，优化记忆保留
-- **⚙️ 高度可配置**: 支持自定义FSRS算法参数，适应不同记忆能力
-- **🔄 真实数据同步**: 支持LeetCode账号登录，自动同步提交记录
-- **🚀 零依赖二进制版**: 提供完全独立的二进制版本，无需Python环境
-- **📊 智能复习调度**: 根据记忆稳定性自动计算最优复习间隔
-- **🔧 轻量级设计**: 从6个依赖优化到2个必需依赖，极致精简
-- **📱 跨平台支持**: 支持Arch Linux (AUR) 和Python环境
-- **⚡ 自动化发布**: GitHub Actions自动更新AUR包
-- **📝 完整文档**: 详细的用户指南和维护记录
+## 🚀 为什么选择 LeetCode FSRS?
 
-## 🎉 版本亮点 (v1.5.1)
+你是否遇到过：
+*   刷过的题过几天就忘？
+*   不知道今天该复习哪些题？
+*   盲目刷题，效率低下？
 
-- ✅ **FSRS参数自定义**: 支持修改算法权重和参数，适应个体差异
-- ✅ **配置管理**: 新增 `config` 命令组，方便管理所有设置
-- ✅ **真实LeetCode认证**: 支持Cookie登录，获取个人数据
-- ✅ **自动同步**: 同步LeetCode最近提交记录到本地
-- ✅ **自动化发布流程**: GitHub Actions自动更新AUR双版本
+**LeetCode FSRS CLI** 完美解决这些问题！它将先进的 **FSRS v4 记忆算法** 引入 LeetCode 刷题流程，为你量身定制复习计划。
 
-## 🚀 快速开始
+### ✨ 核心特性
 
-### 安装
+*   **🧠 FSRS v4 算法内核**: 比 Anki 更先进的记忆算法，精准预测遗忘曲线。
+*   **🔄 真实数据同步**: 一键同步 LeetCode 账号提交记录，自动导入新题。
+*   **⚡ 极速体验**: 纯命令行操作，零延迟，专注刷题本身。
+*   **📱 跨平台支持**: 完美支持 Linux (Arch AUR) 和 Python 环境。
+*   **🔧 高度可定制**: 算法参数、复习限制、快捷键...一切由你掌控。
+*   **📦 零依赖模式**: 提供独立二进制包，无需 Python 环境即可运行。
 
-#### Arch Linux (AUR)
+---
 
-**源码版** (推荐开发者)
+## 📦 快速安装
+
+### 🐧 Arch Linux (推荐)
+
+我们提供了 **AUR** 包，支持源码编译和二进制直接安装：
+
+| 版本 | 包名 | 说明 |
+| :--- | :--- | :--- |
+| **源码版** | `leetcode-fsrs-cli` | 适合开发者，依赖 Python |
+| **二进制版** | `leetcode-fsrs-cli-bin` | **推荐**，零依赖，开箱即用 |
+
 ```bash
-# 使用 paru
-paru -S leetcode-fsrs-cli
-
-# 或使用 yay
-yay -S leetcode-fsrs-cli
-```
-
-**二进制版** (零依赖，推荐普通用户)
-```bash
-# 使用 paru
+# 使用 paru 安装二进制版 (推荐)
 paru -S leetcode-fsrs-cli-bin
 
-# 或使用 yay
+# 或者使用 yay
 yay -S leetcode-fsrs-cli-bin
 ```
 
-**版本对比**:
-- **源码版** (`leetcode-fsrs-cli`): 需要安装 `python-click` 和 `python-requests` 依赖
-- **二进制版** (`leetcode-fsrs-cli-bin`): 完全独立，无需安装任何Python包
+### 🐍 Python (通用)
 
-#### 从源码安装
 ```bash
 # 克隆仓库
 git clone https://github.com/SaintFore/LeetCodeCLI.git
 cd LeetCodeCLI
 
-# 安装包 (会自动安装依赖)
+# 安装
 pip install .
-
-# 或开发模式安装
-pip install -e .
 ```
-
-**注意**: 当前GitHub仓库名为 `LeetCodeCLI`，但包名为 `leetcode-fsrs-cli`
-
-### 使用方法
-
-```bash
-# 1. 登录 LeetCode (需要 Cookie)
-leetcode-fsrs auth login
-
-# 2. 同步题目数据
-leetcode-fsrs sync
-
-# 3. 开始练习
-leetcode-fsrs practice
-
-# 4. 查看复习计划
-leetcode-fsrs practice --plan
-
-# 5. 查看统计
-leetcode-fsrs stats
-
-# 6. 修改配置 (可选)
-leetcode-fsrs config list
-leetcode-fsrs config set fsrs_params.request_retention 0.85
-```
-
-## 📋 命令列表
-
-| 命令 | 说明 | 示例 |
-|------|------|------|
-| `auth` | 认证管理 | `leetcode-fsrs auth login` |
-| `sync` | 同步题目 | `leetcode-fsrs sync` |
-| `practice` | 开始练习 | `leetcode-fsrs practice --limit 20` |
-| `stats` | 显示统计 | `leetcode-fsrs stats` |
-| `list` | 列出题目 | `leetcode-fsrs list --difficulty easy` |
-| `info` | 查看题目详情 | `leetcode-fsrs info 1` |
-| `config` | 配置管理 | `leetcode-fsrs config set ...` |
-| `optimize` | 自动优化参数 | `leetcode-fsrs config optimize` |
-
-## 🧠 FSRS算法
-
-FSRS（Free Spaced Repetition Scheduler）是一种基于记忆模型的间隔重复算法：
-
-- **科学记忆**: 根据记忆稳定性计算最优复习间隔
-- **自适应学习**: 根据用户表现调整复习频率
-- **长期记忆**: 优化长期记忆保留效果
-
-### 评分系统
-在练习时，根据回忆难度给出1-5分：
-
-- **1**: 完全忘记
-- **2**: 很困难
-- **3**: 中等难度
-- **4**: 简单
-- **5**: 完美掌握
-
-## 📊 数据存储
-
-- **数据目录**: `~/.config/leetcode-fsrs-cli/`
-- **题目数据**: `questions.json`
-- **复习记录**: `reviews.json`
-- **用户配置**: `config.json`
-
-## 🔧 配置选项
-
-编辑 `~/.config/leetcode-fsrs-cli/config.json` 自定义设置：
-
-```json
-{
-    "daily_review_limit": 20,
-    "auto_update_due": true,
-    "show_progress_bar": true,
-    "language": "zh"
-}
-```
-
-## 🐛 故障排除
-
-### 常见问题
-
-**Q: 命令找不到**
-A: 确保包已正确安装，检查Python环境
-
-**Q: 数据目录权限问题**
-A: 确保对 `~/.config/` 有写权限
-
-**Q: 练习时没有题目**
-A: 确保已运行 `leetcode-fsrs sync` 同步题目
-
-### 调试信息
-
-```bash
-# 检查安装
-which leetcode-fsrs
-
-# 检查数据目录
-ls -la ~/.config/leetcode-fsrs-cli/
-
-# 查看详细帮助
-leetcode-fsrs --help
-```
-
-## 🤝 贡献
-
-欢迎提交Issue和Pull Request来改进这个项目！
-
-## 📄 许可证
-
-MIT License - 详见 [LICENSE](LICENSE) 文件
-
-## 🙏 致谢
-
-- FSRS算法: [open-spaced-repetition/fsrs4anki](https://github.com/open-spaced-repetition/fsrs4anki)
-- LeetCode: 提供优质的算法题目
 
 ---
 
-**开始你的高效刷题之旅！** 🚀
+## 🎮 使用指南
+
+### 1. 🔐 登录认证
+获取你的 LeetCode Cookie，开启同步之旅。
+
+```bash
+leetcode-fsrs auth login
+```
+> *提示: 登录后 Cookie 会安全保存在本地，用于同步题目状态。*
+
+### 2. 🔄 同步数据
+一键拉取你的 LeetCode 提交记录。
+
+```bash
+leetcode-fsrs sync
+```
+
+### 3. ⚔️ 开始练习 (核心功能)
+启动每日复习！系统会根据算法自动筛选出你最需要复习的题目。
+
+```bash
+leetcode-fsrs practice
+```
+*   **智能推荐**: 自动混合新题和复习题。
+*   **默认限制**: 每天默认推荐 **10** 道题 (可通过 `--limit` 修改)。
+*   **评分反馈**: 练习后根据回忆难度打分 (1-5)，算法自动调整下次复习时间。
+
+### 4. 📊 查看统计
+可视化你的学习进度。
+
+```bash
+leetcode-fsrs stats
+```
+
+---
+
+## 🛠️ 常用命令速查
+
+| 命令 | 描述 | 示例 |
+| :--- | :--- | :--- |
+| `practice` | **开始练习** (默认 10 题) | `leetcode-fsrs practice` |
+| `sync` | **同步** LeetCode 数据 | `leetcode-fsrs sync` |
+| `auth` | **认证** 管理 | `leetcode-fsrs auth status` |
+| `stats` | 查看 **统计** | `leetcode-fsrs stats` |
+| `list` | **列出** 所有题目 | `leetcode-fsrs list --status due` |
+| `info` | 查看 **题目详情** | `leetcode-fsrs info 1` |
+| `config` | **配置** 管理 | `leetcode-fsrs config list` |
+
+---
+
+## ⚙️ 高级配置
+
+配置文件位于 `~/.config/leetcode-fsrs-cli/config.json`。
+你可以通过命令直接修改：
+
+```bash
+# 修改每日复习上限为 20
+leetcode-fsrs config set daily_review_limit 20
+
+# 开启自动优化 FSRS 参数 (需要 scipy)
+leetcode-fsrs config optimize
+```
+
+---
+
+## 🌟 Star History
+
+[![Star History Chart](https://api.star-history.com/svg?repos=SaintFore/LeetCodeCLI&type=Date)](https://star-history.com/#SaintFore/LeetCodeCLI&Date)
+
+---
+
+## 🤝 贡献与支持
+
+*   **Bug 反馈**: 请提交 [Issue](https://github.com/SaintFore/LeetCodeCLI/issues)
+*   **代码贡献**: 欢迎 Pull Request！
+*   **开源协议**: MIT License
+
+---
+
+<p align="center">
+  Made with ❤️ by <a href="https://github.com/SaintFore">SaintFore</a>
+</p>
