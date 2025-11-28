@@ -24,6 +24,13 @@ wheels/
 .installed.cfg
 *.egg
 MANIFEST
+*.pkg.tar.zst
+*.pkg.tar.xz
+*.tar.gz
+
+# Nested Repos
+aur-repo/
+leetcode-fsrs-cli-bin/
 
 # PyInstaller
 *.manifest
