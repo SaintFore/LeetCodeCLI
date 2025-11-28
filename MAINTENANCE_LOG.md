@@ -496,6 +496,9 @@ leetcode-fsrs --help
 - **Bug修复 (v1.6.1)**:
   - 修复 `list` 命令中 `datetime` 与 `date` 类型比较导致的崩溃
   - 修复 `sync` 无法获取全部已通过题目的问题
+- **体验优化 (v1.6.2)**:
+  - `practice` 模式下增加 HTML 标签过滤，题目描述更易读
+  - 优化 `practice` 答题流程的清屏逻辑，减少视觉干扰
 
 ---
 

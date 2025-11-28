@@ -6,6 +6,7 @@ CLI交互界面
 import click
 import sys
 import json
+import re
 from datetime import datetime
 from typing import List, Optional
 
@@ -109,8 +110,9 @@ class LeetCodeFSRSCLI:
             click.echo("-" * 50)
             
             if question.content:
-                # 显示题目内容摘要
-                content_preview = question.content[:500] + "..." if len(question.content) > 500 else question.content
+                # 显示题目内容摘要 (去除HTML)
+                clean_content = self._strip_html(question.content)
+                content_preview = clean_content[:500] + "..." if len(clean_content) > 500 else clean_content
                 click.echo(content_preview)
                 click.echo("-" * 50)
 
@@ -264,9 +266,23 @@ class LeetCodeFSRSCLI:
         
         if question.content:
             click.echo(f"\n📖 题目描述:")
-            click.echo(f"   {question.content[:200]}...")
+            clean_content = self._strip_html(question.content)
+            click.echo(f"   {clean_content[:200]}...")
         
         click.echo("\n" + "=" * 60)
+
+    def _strip_html(self, content: str) -> str:
+        """去除HTML标签"""
+        if not content:
+            return ""
+        # 移除 <p>, <div>, <br> 等标签，替换为换行
+        content = re.sub(r'</?(p|div|br|li)[^>]*>', '\n', content)
+        # 移除其他标签
+        content = re.sub(r'<[^>]+>', '', content)
+        # 处理实体字符
+        content = content.replace('&nbsp;', ' ').replace('&lt;', '<').replace('&gt;', '>').replace('&amp;', '&').replace('&quot;', '"')
+        # 移除多余空行
+        return re.sub(r'\n\s*\n', '\n\n', content).strip()
 
 @click.group()
 @click.version_option(__version__, '--version', '-v', help='显示版本信息')
