@@ -1,12 +1,12 @@
 # Maintainer: SaintFore <saintfore@example.com>
 pkgname=leetcode-fsrs-cli
-pkgver=1.5.0
+pkgver=1.5.1
 pkgrel=1
 pkgdesc="A CLI tool for LeetCode practice using FSRS spaced repetition algorithm"
 arch=('any')
 url="https://github.com/SaintFore/LeetCodeCLI"
 license=('MIT')
-depends=('python' 'python-click' 'python-requests')
+depends=('python' 'python-click' 'python-requests' 'python-scipy' 'python-numpy')
 optdepends=('git: for version control integration')
 makedepends=('python-setuptools')
 provides=('leetcode-fsrs-cli')

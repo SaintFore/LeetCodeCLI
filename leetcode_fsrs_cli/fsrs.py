@@ -18,7 +18,9 @@ class FSRS:
         Args:
             params: FSRS算法参数，如果为None则使用默认参数
         """
-        self.params = params or self.get_default_params()
+        self.params = self.get_default_params()
+        if params:
+            self.params.update(params)
 
     @staticmethod
     def get_default_params() -> dict:

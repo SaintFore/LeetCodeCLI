@@ -5,6 +5,7 @@ CLI交互界面
 
 import click
 import sys
+import json
 from datetime import datetime
 from typing import List, Optional
 
@@ -23,7 +24,12 @@ class LeetCodeFSRSCLI:
     def __init__(self):
         self.question_manager = QuestionManager()
         self.storage_manager = StorageManager()
-        self.fsrs = FSRS()
+        
+        # 加载配置并初始化FSRS
+        config = self.storage_manager.load_config()
+        fsrs_params = config.get("fsrs_params")
+        self.fsrs = FSRS(fsrs_params)
+        
         self.scheduler = ReviewScheduler(self.fsrs)
 
     def init_project(self):
@@ -332,6 +338,156 @@ def info(question_id):
     """显示题目详细信息"""
     cli_obj = LeetCodeFSRSCLI()
     cli_obj.get_question_info(question_id)
+
+
+
+# ==================== 配置命令组 ====================
+
+@cli.group()
+def config():
+    """配置管理"""
+    pass
+
+
+@config.command(name="list")
+def config_list():
+    """显示当前配置"""
+    storage = StorageManager()
+    config_data = storage.load_config()
+    
+    click.echo("\n🔧 当前配置")
+    click.echo("=" * 50)
+    click.echo(json.dumps(config_data, indent=2, ensure_ascii=False))
+    click.echo("=" * 50)
+
+
+@config.command(name="set")
+@click.argument('key')
+@click.argument('value')
+def config_set(key, value):
+    """设置配置项 (例如: daily_review_limit 30 或 fsrs_params.request_retention 0.85)"""
+    storage = StorageManager()
+    config_data = storage.load_config()
+    
+    # 处理类型转换
+    try:
+        if value.lower() == 'true':
+            parsed_value = True
+        elif value.lower() == 'false':
+            parsed_value = False
+        else:
+            try:
+                parsed_value = int(value)
+            except ValueError:
+                try:
+                    parsed_value = float(value)
+                except ValueError:
+                    parsed_value = value
+    except AttributeError:
+        parsed_value = value
+
+    # 处理嵌套键
+    keys = key.split('.')
+    current = config_data
+    
+    try:
+        for k in keys[:-1]:
+            current = current[k]
+        
+        # 检查键是否存在
+        if keys[-1] not in current:
+            click.echo(f"⚠️ 警告: 配置项 '{key}' 不存在，正在创建新项")
+            
+        current[keys[-1]] = parsed_value
+        storage.save_config(config_data)
+        click.echo(f"✅ 已更新: {key} = {parsed_value}")
+        
+    except KeyError:
+        click.echo(f"❌ 错误: 配置路径 '{key}' 无效")
+
+
+@config.command(name="set-weights")
+@click.argument('weights')
+def config_set_weights(weights):
+    """设置FSRS权重 (逗号分隔的17个数字)"""
+    storage = StorageManager()
+    config_data = storage.load_config()
+    
+    try:
+        w_list = [float(x.strip()) for x in weights.split(',')]
+        if len(w_list) != 17:
+            click.echo(f"❌ 错误: 权重数量必须为17个，当前为 {len(w_list)} 个")
+            return
+            
+        if "fsrs_params" not in config_data:
+            config_data["fsrs_params"] = {}
+            
+        config_data["fsrs_params"]["w"] = w_list
+        storage.save_config(config_data)
+        click.echo("✅ FSRS权重已更新")
+        click.echo(f"   {w_list}")
+        
+    except ValueError:
+        click.echo("❌ 错误: 权重必须是数字，用逗号分隔")
+
+
+@config.command(name="optimize")
+def config_optimize():
+    """自动优化FSRS参数 (需要 scipy)"""
+    try:
+        from .optimizer import FSRSOptimizer, HAS_SCIPY
+    except ImportError:
+        click.echo("❌ 无法导入优化器模块")
+        return
+
+    if not HAS_SCIPY:
+        click.echo("❌ 此功能需要安装 scipy 和 numpy")
+        click.echo("👉 请运行: pip install scipy numpy")
+        return
+
+    cli_obj = LeetCodeFSRSCLI()
+    reviews = cli_obj.storage_manager.load_reviews()
+    
+    if not reviews:
+        click.echo("❌ 没有复习记录，无法进行优化")
+        return
+        
+    # 扁平化复习记录
+    flat_reviews = []
+    for qid, record in reviews.items():
+        for r in record.review_history:
+            r_copy = r.copy()
+            r_copy["question_id"] = qid
+            flat_reviews.append(r_copy)
+            
+    if len(flat_reviews) < 50:
+        click.echo(f"⚠️ 复习记录太少 ({len(flat_reviews)} 条)，优化结果可能不准确")
+        if not click.confirm("是否继续?"):
+            return
+            
+    click.echo("🔄 正在分析复习历史并优化参数...")
+    click.echo("   这可能需要几秒钟...")
+    
+    optimizer = FSRSOptimizer(cli_obj.fsrs)
+    try:
+        new_w, loss = optimizer.optimize(flat_reviews)
+        
+        click.echo(f"\n✅ 优化完成! (Loss: {loss:.4f})")
+        click.echo(f"旧权重: {cli_obj.fsrs.params['w']}")
+        click.echo(f"新权重: {new_w}")
+        
+        if click.confirm("\n是否应用新权重?"):
+            config_data = cli_obj.storage_manager.load_config()
+            if "fsrs_params" not in config_data:
+                config_data["fsrs_params"] = {}
+            config_data["fsrs_params"]["w"] = new_w
+            cli_obj.storage_manager.save_config(config_data)
+            click.echo("✅ 配置已更新")
+        else:
+            click.echo("已取消应用")
+            
+    except Exception as e:
+        click.echo(f"❌ 优化失败: {e}")
 
 
 # ==================== 认证命令组 ====================

@@ -458,6 +458,30 @@ leetcode-fsrs --help
 
 ---
 
+## 📅 2025-11-28: v1.5.1 功能更新 - FSRS参数自定义
+ 
+### 变更内容
+- **新增功能**:
+  - 实现 `config` 命令组，支持查看和修改配置
+  - 支持自定义 FSRS 算法参数 (`w`, `request_retention` 等)
+  - 优化 FSRS 初始化逻辑，优先使用用户配置
+- **CLI改进**:
+  - 新增 `config list` 显示当前配置 (JSON格式)
+  - 新增 `config set` 支持修改嵌套配置项
+  - 新增 `config set-weights` 方便设置算法权重
+  - 新增 `config optimize` 自动优化参数 (基于Scipy)
+- **文档**:
+  - 更新 README.md 添加配置命令说明
+  - 更新 setup.py 和 PKGBUILD 版本号至 1.5.1
+
+### 技术细节
+- **配置合并**: 实现了默认参数与用户参数的智能合并
+- **类型转换**: `config set` 自动处理 bool/int/float 类型转换
+- **嵌套键支持**: 支持 `fsrs_params.request_retention` 这种点号分隔的键路径
+- **优化器**: 实现轻量级 `FSRSOptimizer`，使用 `scipy.optimize.minimize` 进行 Log Loss 最小化
+
+---
+
 **维护记录更新**: 2025-11-28 by Claude Code AI Assistant
 
 这个文档将持续更新，记录所有重要的维护活动和项目变更。

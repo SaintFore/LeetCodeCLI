@@ -138,6 +138,10 @@ class StorageManager:
             "show_progress_bar": True,
             "language": "zh",
             "fsrs_params": {
+                "w": [
+                    0.4, 0.6, 2.4, 5.8, 4.93, 0.94, 0.86, 0.01,
+                    1.49, 0.14, 0.94, 2.18, 0.05, 0.34, 1.26, 0.29, 2.61
+                ],
                 "request_retention": 0.9,
                 "maximum_interval": 36500,
                 "easy_bonus": 1.3,
@@ -155,6 +159,13 @@ class StorageManager:
             # 合并默认配置和用户配置
             merged_config = default_config.copy()
             merged_config.update(user_config)
+            
+            # 深度合并 fsrs_params
+            if "fsrs_params" in user_config:
+                merged_fsrs = default_config["fsrs_params"].copy()
+                merged_fsrs.update(user_config["fsrs_params"])
+                merged_config["fsrs_params"] = merged_fsrs
+                
             return merged_config
 
         except (json.JSONDecodeError, FileNotFoundError) as e:

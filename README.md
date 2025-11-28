@@ -5,11 +5,12 @@
 [![AUR](https://img.shields.io/aur/version/leetcode-fsrs-cli)](https://aur.archlinux.org/packages/leetcode-fsrs-cli)
 [![AUR](https://img.shields.io/aur/version/leetcode-fsrs-cli-bin)](https://aur.archlinux.org/packages/leetcode-fsrs-cli-bin)
 [![License](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
-[![Version](https://img.shields.io/badge/version-1.5.0-blue.svg)](https://github.com/SaintFore/LeetCodeCLI/releases)
+[![Version](https://img.shields.io/badge/version-1.5.1-blue.svg)](https://github.com/SaintFore/LeetCodeCLI/releases)
 
 ## ✨ 特性概览
 
 - **🎯 科学记忆算法**: 基于FSRS v4间隔重复算法，优化记忆保留
+- **⚙️ 高度可配置**: 支持自定义FSRS算法参数，适应不同记忆能力
 - **🔄 真实数据同步**: 支持LeetCode账号登录，自动同步提交记录
 - **🚀 零依赖二进制版**: 提供完全独立的二进制版本，无需Python环境
 - **📊 智能复习调度**: 根据记忆稳定性自动计算最优复习间隔
@@ -18,13 +19,13 @@
 - **⚡ 自动化发布**: GitHub Actions自动更新AUR包
 - **📝 完整文档**: 详细的用户指南和维护记录
 
-## 🎉 版本亮点 (v1.5.0)
+## 🎉 版本亮点 (v1.5.1)
 
+- ✅ **FSRS参数自定义**: 支持修改算法权重和参数，适应个体差异
+- ✅ **配置管理**: 新增 `config` 命令组，方便管理所有设置
 - ✅ **真实LeetCode认证**: 支持Cookie登录，获取个人数据
 - ✅ **自动同步**: 同步LeetCode最近提交记录到本地
 - ✅ **自动化发布流程**: GitHub Actions自动更新AUR双版本
-- ✅ **依赖优化**: 保持轻量级设计
-- ✅ **二进制包支持**: 提供零依赖的二进制版本
 
 ## 🚀 快速开始
 
@@ -86,6 +87,10 @@ leetcode-fsrs practice
 
 # 5. 查看统计
 leetcode-fsrs stats
+
+# 6. 修改配置 (可选)
+leetcode-fsrs config list
+leetcode-fsrs config set fsrs_params.request_retention 0.85
 ```
 
 ## 📋 命令列表
@@ -100,6 +105,8 @@ leetcode-fsrs stats
 | `schedule` | 复习计划 | `leetcode-fsrs schedule` |
 | `list` | 列出题目 | `leetcode-fsrs list --difficulty easy` |
 | `info` | 查看题目详情 | `leetcode-fsrs info 1` |
+| `config` | 配置管理 | `leetcode-fsrs config set ...` |
+| `optimize` | 自动优化参数 | `leetcode-fsrs config optimize` |
 
 ## 🧠 FSRS算法
 
