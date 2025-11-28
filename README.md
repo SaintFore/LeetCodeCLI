@@ -5,7 +5,7 @@
 [![AUR](https://img.shields.io/aur/version/leetcode-fsrs-cli)](https://aur.archlinux.org/packages/leetcode-fsrs-cli)
 [![AUR](https://img.shields.io/aur/version/leetcode-fsrs-cli-bin)](https://aur.archlinux.org/packages/leetcode-fsrs-cli-bin)
 [![License](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
-[![Version](https://img.shields.io/badge/version-1.5.1-blue.svg)](https://github.com/SaintFore/LeetCodeCLI/releases)
+[![Version](https://img.shields.io/badge/version-1.5.2-blue.svg)](https://github.com/SaintFore/LeetCodeCLI/releases)
 
 ## ✨ 特性概览
 
