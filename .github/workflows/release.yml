@@ -30,7 +30,7 @@ jobs:
           # Create binary with PyInstaller
           pyinstaller --onefile \
             --name leetcode-fsrs \
-            --add-data "leetcode_fsrs_cli/data/*.json:leetcode_fsrs_cli/data" \
+            --add-data "leetcode_fsrs_cli/data:leetcode_fsrs_cli/data" \
             leetcode_fsrs_cli/cli.py
           
           # Rename binary to include version and arch
