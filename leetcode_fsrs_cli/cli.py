@@ -12,6 +12,8 @@ from .fsrs import FSRS, ReviewRecord
 from .leetcode import QuestionManager, Question, SAMPLE_QUESTIONS
 from .storage import StorageManager
 from .scheduler import ReviewScheduler, ReviewSession
+from .auth import AuthManager
+from .sync import SyncManager, SyncReport
 
 
 class LeetCodeFSRSCLI:
@@ -29,34 +31,16 @@ class LeetCodeFSRSCLI:
         data_dir = self.question_manager.data_dir
         click.echo(f"📁 数据目录: {data_dir}")
 
-        # 添加示例题目
-        for question in SAMPLE_QUESTIONS:
-            self.question_manager.add_question(question)
-
         # 创建默认配置
         config = self.storage_manager.load_config()
         self.storage_manager.save_config(config)
 
-        click.echo("✅ 项目初始化完成！")
-        click.echo(f"📚 已添加 {len(SAMPLE_QUESTIONS)} 个示例题目")
-        click.echo(f"💾 数据保存在: {data_dir}")
-
-    def add_question(self, question_id: int, title: str, difficulty: str, tags: List[str]):
-        """添加题目"""
-        url = f"https://leetcode.com/problems/{title.lower().replace(' ', '-')}/"
-
-        question = Question(
-            id=question_id,
-            title=title,
-            difficulty=difficulty,
-            tags=tags,
-            url=url
-        )
-
-        if self.question_manager.add_question(question):
-            click.echo(f"✅ 题目 {question_id}. {title} 添加成功！")
-        else:
-            click.echo(f"❌ 题目 {question_id} 已存在！")
+        click.echo("\n✅ 项目初始化完成！")
+        click.echo("\n📝 后续步骤:")
+        click.echo("   1. 认证: leetcode-fsrs auth login")
+        click.echo("   2. 同步: leetcode-fsrs sync")
+        click.echo("   3. 练习: leetcode-fsrs practice")
+        click.echo(f"\n💾 数据保存在: {data_dir}")
 
     def practice(self, limit: int = 20):
         """开始练习"""
@@ -192,49 +176,85 @@ class LeetCodeFSRSCLI:
         if len(sessions) > 10:
             click.echo(f"... 还有 {len(sessions) - 10} 题")
 
-    def list_questions(self, difficulty: Optional[str] = None, tag: Optional[str] = None):
+    def list_questions(self, difficulty: Optional[str] = None, tag: Optional[str] = None, status: Optional[str] = None):
         """列出题目"""
         tags = [tag] if tag else None
         questions = self.question_manager.list_questions(difficulty, tags)
+
+        # 按状态过滤
+        if status:
+            filtered_questions = []
+            for question in questions:
+                review = self.storage_manager.get_review_record(question.id)
+                if status == "due" and review and review.next_review and review.next_review <= datetime.now().date():
+                    filtered_questions.append(question)
+                elif status == "done" and review and review.next_review and review.next_review > datetime.now().date():
+                    filtered_questions.append(question)
+                elif status == "new" and not review:
+                    filtered_questions.append(question)
+            questions = filtered_questions
 
         if not questions:
             click.echo("❌ 没有找到符合条件的题目")
             return
 
         click.echo(f"📚 题目列表 ({len(questions)} 题)")
-        click.echo("=" * 50)
+        click.echo("=" * 60)
 
         for question in questions:
             review = self.storage_manager.get_review_record(question.id)
-            status = "✅ 已复习" if review else "🆕 未开始"
+            if not review:
+                status_str = "🆕 未开始"
+                next_review_str = ""
+            elif review.next_review and review.next_review <= datetime.now().date():
+                status_str = "⏰ 待复习"
+                next_review_str = f"   下次复习: {review.next_review.strftime('%Y-%m-%d')}"
+            else:
+                status_str = "✅ 已复习"
+                next_review_str = f"   下次复习: {review.next_review.strftime('%Y-%m-%d') if review.next_review else 'N/A'}"
 
             click.echo(f"{question.id}. {question.title}")
             click.echo(f"   难度: {question.difficulty}")
             click.echo(f"   标签: {', '.join(question.tags)}")
-            click.echo(f"   状态: {status}")
-            if review and review.next_review:
-                click.echo(f"   下次复习: {review.next_review.strftime('%Y-%m-%d')}")
+            click.echo(f"   状态: {status_str}")
+            if next_review_str:
+                click.echo(next_review_str)
             click.echo()
 
-    def search_questions(self, keyword: str):
-        """搜索题目"""
-        questions = self.question_manager.search_questions(keyword)
-
-        if not questions:
-            click.echo(f"❌ 没有找到包含 '{keyword}' 的题目")
+    def get_question_info(self, question_id: int):
+        """显示题目详细信息"""
+        question = self.question_manager.get_question(question_id)
+        
+        if not question:
+            click.echo(f"❌ 题目 {question_id} 不存在")
             return
-
-        click.echo(f"🔍 搜索结果 ({len(questions)} 题)")
-        click.echo("=" * 40)
-
-        for question in questions:
-            click.echo(f"{question.id}. {question.title}")
-            click.echo(f"   难度: {question.difficulty}")
-            click.echo(f"   标签: {', '.join(question.tags)}")
-            click.echo()
-
-
-# CLI命令定义
+        
+        review = self.storage_manager.get_review_record(question_id)
+        
+        click.echo("=" * 60)
+        click.echo(f"📌 题目 {question.id}: {question.title}")
+        click.echo("=" * 60)
+        
+        click.echo(f"\n📊 基本信息:")
+        click.echo(f"   难度: {question.difficulty}")
+        click.echo(f"   标签: {', '.join(question.tags)}")
+        click.echo(f"   链接: {question.url}")
+        
+        if review:
+            click.echo(f"\n📈 复习信息:")
+            click.echo(f"   稳定性: {review.stability:.2f}")
+            click.echo(f"   难度系数: {review.difficulty:.2f}")
+            click.echo(f"   复习次数: {len(review.review_log) if hasattr(review, 'review_log') else 0}")
+            if review.next_review:
+                click.echo(f"   下次复习: {review.next_review.strftime('%Y-%m-%d')}")
+        else:
+            click.echo(f"\n📝 状态: 未开始复习")
+        
+        if question.content:
+            click.echo(f"\n📖 题目描述:")
+            click.echo(f"   {question.content[:200]}...")
+        
+        click.echo("\n" + "=" * 60)
 
 @click.group()
 @click.pass_context
@@ -246,59 +266,160 @@ def cli(ctx):
 @cli.command()
 def init():
     """初始化项目"""
-    cli = LeetCodeFSRSCLI()
-    cli.init_project()
-
-
-@cli.command()
-@click.argument('question_id', type=int)
-@click.argument('title')
-@click.argument('difficulty')
-@click.argument('tags')
-def add(question_id, title, difficulty, tags):
-    """添加题目"""
-    cli = LeetCodeFSRSCLI()
-    tag_list = [tag.strip() for tag in tags.split(',')]
-    cli.add_question(question_id, title, difficulty, tag_list)
+    cli_obj = LeetCodeFSRSCLI()
+    cli_obj.init_project()
 
 
 @cli.command()
 @click.option('--limit', default=20, help='每日复习题目数量限制')
 def practice(limit):
     """开始练习"""
-    cli = LeetCodeFSRSCLI()
-    cli.practice(limit)
+    cli_obj = LeetCodeFSRSCLI()
+    cli_obj.practice(limit)
 
 
 @cli.command()
 def stats():
     """显示统计信息"""
-    cli = LeetCodeFSRSCLI()
-    cli.stats()
+    cli_obj = LeetCodeFSRSCLI()
+    cli_obj.stats()
 
 
 @cli.command()
 def schedule():
     """生成复习计划"""
-    cli = LeetCodeFSRSCLI()
-    cli.schedule()
+    cli_obj = LeetCodeFSRSCLI()
+    cli_obj.schedule()
 
 
 @cli.command()
-@click.option('--difficulty', help='按难度过滤')
+@click.option('--difficulty', help='按难度过滤 (easy/medium/hard)')
 @click.option('--tag', help='按标签过滤')
-def list(difficulty, tag):
+@click.option('--status', help='按状态过滤 (due/done/new)')
+def list(difficulty, tag, status):
     """列出题目"""
-    cli = LeetCodeFSRSCLI()
-    cli.list_questions(difficulty, tag)
+    cli_obj = LeetCodeFSRSCLI()
+    cli_obj.list_questions(difficulty, tag, status)
 
 
 @cli.command()
-@click.argument('keyword')
-def search(keyword):
-    """搜索题目"""
-    cli = LeetCodeFSRSCLI()
-    cli.search_questions(keyword)
+@click.argument('question_id', type=int)
+def info(question_id):
+    """显示题目详细信息"""
+    cli_obj = LeetCodeFSRSCLI()
+    cli_obj.get_question_info(question_id)
+
+
+# ==================== 认证命令组 ====================
+
+@cli.group()
+def auth():
+    """认证管理"""
+    pass
+
+
+@auth.command()
+def login():
+    """登录 LeetCode"""
+    auth_manager = AuthManager()
+    
+    click.echo("\n" + "=" * 50)
+    click.echo("🔐 LeetCode Cookie 登录")
+    click.echo("=" * 50)
+    click.echo("\n获取Cookie的步骤:")
+    click.echo("1. 访问 https://leetcode.com")
+    click.echo("2. 登录您的LeetCode账户")
+    click.echo("3. 打开浏览器开发者工具 (F12)")
+    click.echo("4. 进入 应用 > Cookie > 查找 LEETCODE_SESSION")
+    click.echo("5. 复制其值或导出所有Cookie")
+    click.echo("\n可接受的格式:")
+    click.echo("- LEETCODE_SESSION=xxx")
+    click.echo("- 完整Cookie字符串")
+    
+    cookie = click.prompt("\n请粘贴Cookie内容", hide_input=True)
+    
+    if not cookie or len(cookie.strip()) < 10:
+        click.echo("❌ Cookie太短或为空，请重试")
+        return
+    
+    if auth_manager.verify_cookie(cookie):
+        if auth_manager.save_cookie(cookie.strip()):
+            click.echo("✅ Cookie已保存成功！")
+            click.echo("📝 下一步: 运行 'leetcode-fsrs sync' 同步您的题目")
+        else:
+            click.echo("❌ 保存Cookie失败")
+    else:
+        click.echo("⚠️ Cookie格式可能不正确，但已尝试保存")
+        if auth_manager.save_cookie(cookie.strip()):
+            click.echo("✅ Cookie已保存，但需要验证")
+        else:
+            click.echo("❌ 保存Cookie失败")
+
+
+@auth.command()
+def logout():
+    """登出并清除认证信息"""
+    auth_manager = AuthManager()
+    
+    if click.confirm("确定要清除保存的Cookie吗?"):
+        if auth_manager.clear_auth():
+            click.echo("✅ 已清除认证信息")
+        else:
+            click.echo("❌ 清除失败")
+    else:
+        click.echo("已取消")
+
+
+@auth.command()
+def status():
+    """查看认证状态"""
+    auth_manager = AuthManager()
+    auth_info = auth_manager.get_auth_info()
+    
+    click.echo("\n" + "=" * 50)
+    click.echo("🔐 认证状态")
+    click.echo("=" * 50)
+    
+    if auth_info.get("authenticated"):
+        click.echo(f"✅ 已认证")
+        click.echo(f"   用户ID: {auth_info.get('user_id')}")
+        click.echo(f"   Cookie: {auth_info.get('cookie')}")
+    else:
+        click.echo("❌ 未认证")
+        click.echo("📝 运行 'leetcode-fsrs auth login' 来认证")
+    
+    click.echo("=" * 50)
+
+
+# ==================== 同步命令 ====================
+
+@cli.command()
+@click.option('--full', is_flag=True, help='执行完整重新同步')
+def sync(full):
+    """同步LeetCode题目"""
+    auth_manager = AuthManager()
+    sync_manager = SyncManager()
+    
+    # 检查认证状态
+    auth_info = auth_manager.get_auth_info()
+    if not auth_info.get("authenticated"):
+        click.echo("❌ 未认证，请先运行 'leetcode-fsrs auth login'")
+        return
+    
+    click.echo("\n🔄 正在从LeetCode同步题目...")
+    
+    report = sync_manager.perform_sync(full_sync=full)
+    
+    if report.status == "success":
+        sync_manager.display_sync_summary(
+            report.new_count, 
+            report.updated_count, 
+            report.unchanged_count, 
+            report.total_count
+        )
+        click.echo("✅ 同步完成！")
+    else:
+        click.echo("❌ 同步失败，请检查网络或Cookie是否过期")
 
 
 if __name__ == '__main__':
