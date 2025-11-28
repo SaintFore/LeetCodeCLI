@@ -1,3 +1,7 @@
+import sys
+from unittest.mock import MagicMock
+sys.modules["click"] = MagicMock()
+
 import unittest
 from unittest.mock import patch, mock_open, MagicMock
 import json

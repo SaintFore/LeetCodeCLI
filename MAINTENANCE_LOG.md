@@ -504,6 +504,9 @@ leetcode-fsrs --help
   - 新增存储管理模块单元测试 (`tests/test_storage.py`)
   - 新增调度器逻辑单元测试 (`tests/test_scheduler.py`)
   - 新增 CLI 交互流程单元测试 (`tests/test_cli.py`)
+- **Bug修复 (v1.6.3)**:
+  - 修复 FSRS 算法权重数组缺失导致的 `IndexError` (通过单元测试发现)
+  - 修复 FSRS 算法在 Rating=3 (Good) 时稳定性下降的逻辑问题
 
 ---
 

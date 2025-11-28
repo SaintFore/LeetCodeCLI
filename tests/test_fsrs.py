@@ -1,3 +1,7 @@
+import sys
+from unittest.mock import MagicMock
+sys.modules["click"] = MagicMock()
+
 import unittest
 from datetime import datetime, timedelta
 from leetcode_fsrs_cli.fsrs import FSRS, ReviewRecord

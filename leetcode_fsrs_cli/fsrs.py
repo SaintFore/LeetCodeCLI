@@ -27,8 +27,9 @@ class FSRS:
         """获取FSRS默认参数"""
         return {
             "w": [
-                0.4, 0.6, 2.4, 5.8, 4.93, 0.94, 0.86, 0.01,
-                1.49, 0.14, 0.94, 2.18, 0.05, 0.34, 1.26, 0.29, 2.61
+                0.40255, 1.18385, 3.173, 15.69105, 7.1949, 0.5345, 1.4604, 0.0046,
+                1.54575, 0.1192, 1.01925, 1.9395, 0.11, 0.29605, 1.27625, 0.25605,
+                2.9438, 0.48915, 0.2905
             ],
             "request_retention": 0.9,  # 目标记忆保留率
             "maximum_interval": 36500,  # 最大间隔天数
@@ -73,18 +74,22 @@ class FSRS:
             # 更新稳定性
             if rating == 2:  # 困难
                 new_stability = w[9] * math.pow(difficulty, w[10]) * math.pow(new_difficulty, -w[11]) * stability
-            elif rating == 3:  # 中等
-                new_stability = w[12] * math.pow(difficulty, w[13]) * math.pow(new_difficulty, -w[14]) * stability
-            else:  # 简单或完美
-                new_stability = stability * (1 + w[5] * (5 - rating) * math.pow(retrievability, w[6]))
+            else:  # 中等(3), 简单(4), 完美(5)
+                # 使用通用的稳定性增长公式
+                # 注意: 这里的公式是简化的，确保稳定性随 rating 增加而增加
+                # rating: 3->1, 4->2, 5->3
+                factor = rating - 2
+                new_stability = stability * (1 + w[5] * factor * math.pow(retrievability, w[6]))
 
             # 计算新间隔
             if rating == 2:  # 困难
                 new_interval = elapsed_days * self.params["hard_factor"]
             elif rating == 4:  # 简单
                 new_interval = elapsed_days * self.params["easy_bonus"]
-            else:  # 中等或完美
-                new_interval = elapsed_days * (1 + w[4] * (rating - 3))
+            else:  # 中等(3) 或 完美(5)
+                # 对于 Rating 3 (Good)，我们希望间隔增加
+                # 使用 rating - 2 作为乘数: 3->1, 5->3
+                new_interval = elapsed_days * (1 + w[4] * (rating - 2))
 
             # 应用间隔约束
             new_interval = max(1, min(new_interval, self.params["maximum_interval"]))
