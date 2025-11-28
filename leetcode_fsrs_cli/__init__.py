@@ -22,7 +22,7 @@ LeetCode FSRS CLI - 基于FSRS算法的LeetCode刷题工具
 - 维护记录: 详见项目根目录的MAINTENANCE_LOG.md
 """
 
-__version__ = "1.5.0"
+from .version import __version__
 __author__ = "SaintFore"
 __email__ = "saintfore@example.com"
 

@@ -14,6 +14,7 @@ from .storage import StorageManager
 from .scheduler import ReviewScheduler, ReviewSession
 from .auth import AuthManager
 from .sync import SyncManager, SyncReport
+from .version import __version__
 
 
 class LeetCodeFSRSCLI:
@@ -279,6 +280,7 @@ class LeetCodeFSRSCLI:
         click.echo("\n" + "=" * 60)
 
 @click.group()
+@click.version_option(__version__, '--version', '-v', help='显示版本信息')
 @click.pass_context
 def cli(ctx):
     """LeetCode FSRS CLI - 基于FSRS算法的LeetCode刷题工具"""
