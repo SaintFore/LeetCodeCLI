@@ -73,17 +73,17 @@ pip install -e .
 ### 使用方法
 
 ```bash
-# 1. 初始化项目
-leetcode-fsrs init
-
-# 2. 登录 LeetCode (需要 Cookie)
+# 1. 登录 LeetCode (需要 Cookie)
 leetcode-fsrs auth login
 
-# 3. 同步题目数据
+# 2. 同步题目数据
 leetcode-fsrs sync
 
-# 4. 开始练习
+# 3. 开始练习
 leetcode-fsrs practice
+
+# 4. 查看复习计划
+leetcode-fsrs practice --plan
 
 # 5. 查看统计
 leetcode-fsrs stats
@@ -97,12 +97,10 @@ leetcode-fsrs config set fsrs_params.request_retention 0.85
 
 | 命令 | 说明 | 示例 |
 |------|------|------|
-| `init` | 初始化项目 | `leetcode-fsrs init` |
 | `auth` | 认证管理 | `leetcode-fsrs auth login` |
 | `sync` | 同步题目 | `leetcode-fsrs sync` |
 | `practice` | 开始练习 | `leetcode-fsrs practice --limit 20` |
 | `stats` | 显示统计 | `leetcode-fsrs stats` |
-| `schedule` | 复习计划 | `leetcode-fsrs schedule` |
 | `list` | 列出题目 | `leetcode-fsrs list --difficulty easy` |
 | `info` | 查看题目详情 | `leetcode-fsrs info 1` |
 | `config` | 配置管理 | `leetcode-fsrs config set ...` |
@@ -156,7 +154,7 @@ A: 确保包已正确安装，检查Python环境
 A: 确保对 `~/.config/` 有写权限
 
 **Q: 练习时没有题目**
-A: 确保已运行 `leetcode-fsrs init` 并添加题目
+A: 确保已运行 `leetcode-fsrs sync` 同步题目
 
 ### 调试信息
 

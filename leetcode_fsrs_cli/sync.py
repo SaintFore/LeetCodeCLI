@@ -170,7 +170,7 @@ class SyncManager:
 
         # 3. 获取远程题目列表
         click.echo("🔄 正在获取远程题目列表...")
-        # TODO: 支持分页获取所有题目，目前获取最近1000个
+        # 尝试获取所有题目 (REST API)
         remote_problems = client.get_user_problems(limit=1000)
         if not remote_problems:
             click.echo("⚠️ 未获取到远程题目或列表为空")
