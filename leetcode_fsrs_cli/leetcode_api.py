@@ -105,9 +105,35 @@ class LeetCodeAPIClient:
 
     def get_user_problems(self, limit: int = 1000) -> List[Dict[str, Any]]:
         """
-        获取用户已提交/已通过的题目（简化实现）
-        返回列表，包含题目id、title、slug 等基本信息
+        获取用户已提交/已通过的题目
+        优先尝试获取所有已通过题目 (REST API)，如果失败则回退到最近提交 (GraphQL)
         """
+        # 尝试使用 REST API 获取所有题目状态
+        try:
+            url = "https://leetcode.com/api/problems/all/"
+            resp = self.session.get(url, timeout=self.timeout)
+            
+            if resp.status_code == 200:
+                data = resp.json()
+                problems = []
+                
+                for item in data.get("stat_status_pairs", []):
+                    if item.get("status") == "ac":
+                        stat = item.get("stat", {})
+                        problems.append({
+                            "title": stat.get("question__title"),
+                            "slug": stat.get("question__title_slug"),
+                            "id": stat.get("question_id"),
+                            "timestamp": None # REST API 不返回时间戳，但这不影响同步逻辑
+                        })
+                
+                if problems:
+                    return problems
+                    
+        except Exception as e:
+            click.echo(f"⚠️ REST API 获取失败，回退到 GraphQL: {e}")
+
+        # 回退到 GraphQL 获取最近提交
         # 因为需要 username，我们先尝试获取当前用户
         username = self.get_current_username()
         if not username:

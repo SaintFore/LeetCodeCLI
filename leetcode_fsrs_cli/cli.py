@@ -216,7 +216,7 @@ class LeetCodeFSRSCLI:
             if not review:
                 status_str = "🆕 未开始"
                 next_review_str = ""
-            elif review.next_review and review.next_review <= datetime.now().date():
+            elif review.next_review and review.next_review.date() <= datetime.now().date():
                 status_str = "⏰ 待复习"
                 next_review_str = f"   下次复习: {review.next_review.strftime('%Y-%m-%d')}"
             else:

@@ -492,7 +492,10 @@ leetcode-fsrs --help
   - `practice` 命令增加 `--plan` 选项查看复习计划
   - `practice` 练习过程中自动清屏，优化视觉体验
   - `list` 命令增加分页支持 (Pager)
-  - `sync` 命令默认同步数量提升至 1000，解决同步不全问题
+  - `sync` 命令改为优先使用 REST API 获取所有题目，彻底解决 GraphQL 仅返回最近20题的限制
+- **Bug修复 (v1.6.1)**:
+  - 修复 `list` 命令中 `datetime` 与 `date` 类型比较导致的崩溃
+  - 修复 `sync` 无法获取全部已通过题目的问题
 
 ---
 
