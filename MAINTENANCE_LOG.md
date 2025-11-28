@@ -499,6 +499,11 @@ leetcode-fsrs --help
 - **体验优化 (v1.6.2)**:
   - `practice` 模式下增加 HTML 标签过滤，题目描述更易读
   - 优化 `practice` 答题流程的清屏逻辑，减少视觉干扰
+- **测试覆盖**:
+  - 新增 FSRS 算法核心逻辑单元测试 (`tests/test_fsrs.py`)
+  - 新增存储管理模块单元测试 (`tests/test_storage.py`)
+  - 新增调度器逻辑单元测试 (`tests/test_scheduler.py`)
+  - 新增 CLI 交互流程单元测试 (`tests/test_cli.py`)
 
 ---
 
