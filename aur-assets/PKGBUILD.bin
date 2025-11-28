@@ -1,0 +1,28 @@
+# Maintainer: SaintFore <saintfore@example.com>
+pkgname=leetcode-fsrs-cli-bin
+pkgver=1.5.1
+pkgrel=1
+pkgdesc="A CLI tool for LeetCode practice using FSRS spaced repetition algorithm (Binary Version)"
+arch=('x86_64')
+url="https://github.com/SaintFore/LeetCodeCLI"
+license=('MIT')
+depends=('glibc')
+provides=('leetcode-fsrs-cli')
+conflicts=('leetcode-fsrs-cli')
+replaces=('leetcode-fsrs-cli')
+
+source=("https://github.com/SaintFore/LeetCodeCLI/releases/download/v$pkgver/leetcode-fsrs-linux-x86_64"
+        "https://raw.githubusercontent.com/SaintFore/LeetCodeCLI/v$pkgver/LICENSE"
+        "https://raw.githubusercontent.com/SaintFore/LeetCodeCLI/v$pkgver/README.md")
+sha256sums=('SKIP' 'SKIP' 'SKIP')
+
+package() {
+  # Install binary
+  install -Dm755 leetcode-fsrs-linux-x86_64 "$pkgdir/usr/bin/leetcode-fsrs"
+  
+  # Install license
+  install -Dm644 LICENSE "$pkgdir/usr/share/licenses/$pkgname/LICENSE"
+  
+  # Install documentation
+  install -Dm644 README.md "$pkgdir/usr/share/doc/$pkgname/README.md"
+}

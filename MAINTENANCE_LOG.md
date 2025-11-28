@@ -479,6 +479,10 @@ leetcode-fsrs --help
 - **类型转换**: `config set` 自动处理 bool/int/float 类型转换
 - **嵌套键支持**: 支持 `fsrs_params.request_retention` 这种点号分隔的键路径
 - **优化器**: 实现轻量级 `FSRSOptimizer`，使用 `scipy.optimize.minimize` 进行 Log Loss 最小化
+- **CI/CD**:
+  - 新增 `release.yml` 自动构建并发布 Linux 二进制文件
+  - 修复 `aur-update.yml` 以支持 `leetcode-fsrs-cli-bin` 使用预编译二进制
+  - 优化 AUR 更新流程，改为由 Release 发布事件触发
 
 ---
 

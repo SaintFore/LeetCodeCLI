@@ -1,9 +1,8 @@
 name: Update AUR Packages
 
 on:
-  push:
-    tags:
-      - 'v*'
+  release:
+    types: [published]
   workflow_dispatch:
 
 jobs:
@@ -38,16 +37,17 @@ jobs:
 
     - name: Update binary package files
       run: |
+        # Copy PKGBUILD template
+        cp aur-assets/PKGBUILD.bin aur-repo-bin/PKGBUILD
+        
         # Update version in AUR binary repository
         cd aur-repo-bin
-        VERSION=${{ github.ref_name }}
+        VERSION=${{ github.event.release.tag_name }}
         VERSION=${VERSION#v}
+        echo "Updating to version $VERSION"
 
         # Update PKGBUILD version
         sed -i "s/^pkgver=.*/pkgver=$VERSION/" PKGBUILD
-
-        # Update source URL with new version
-        sed -i "s|^source=.*|source=(\"https://github.com/SaintFore/LeetCodeCLI/archive/refs/tags/v$VERSION.tar.gz\")|" PKGBUILD
 
         # Generate .SRCINFO using Docker and makepkg with updpkgsums
         docker run --rm -v $(pwd):/build archlinux:latest bash -c "
@@ -63,7 +63,14 @@ jobs:
 
           # 🔥 关键: 使用 updpkgsums 自动更新校验和 (以builder用户运行)
           echo 'Running updpkgsums to update SHA256 checksums...'
-          su builder -c 'updpkgsums'
+          # Retry loop for updpkgsums in case the release asset is not yet fully available
+          for i in {1..5}; do
+            if su builder -c 'updpkgsums'; then
+              break
+            fi
+            echo 'updpkgsums failed, retrying in 10s...'
+            sleep 10
+          done
 
           # Generate .SRCINFO
           su builder -c 'makepkg --printsrcinfo > .SRCINFO'
@@ -134,7 +141,7 @@ jobs:
 
         # Update version
         cd aur-repo-main
-        VERSION=${{ github.ref_name }}
+        VERSION=${{ github.event.release.tag_name }}
         VERSION=${VERSION#v}
 
         # Update PKGBUILD version
