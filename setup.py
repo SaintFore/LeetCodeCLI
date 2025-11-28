@@ -34,7 +34,7 @@ with open("requirements.txt", "r", encoding="utf-8") as fh:
 
 setup(
     name="leetcode-fsrs-cli",
-    version="1.6.0",
+    version="1.6.1",
     author="SaintFore",
     author_email="saintfore@example.com",
     description="A CLI tool for LeetCode practice using FSRS spaced repetition algorithm",
