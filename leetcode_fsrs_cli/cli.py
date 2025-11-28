@@ -46,15 +46,35 @@ class LeetCodeFSRSCLI:
         """开始练习"""
         # 获取到期的复习记录
         due_reviews = self.storage_manager.get_due_reviews()
+        questions = {q.id: q for q in self.question_manager.list_questions()}
+        
+        # 如果复习题目不足，补充新题目
+        new_reviews = []
+        if len(due_reviews) < limit:
+            needed = limit - len(due_reviews)
+            # 查找没有复习记录的题目
+            existing_review_ids = set(self.storage_manager.load_reviews().keys())
+            new_questions = [
+                q for q_id, q in questions.items() 
+                if q_id not in existing_review_ids
+            ]
+            # 简单按ID排序取前N个
+            new_questions.sort(key=lambda q: q.id, reverse=True)
+            
+            for q in new_questions[:needed]:
+                # 创建初始复习记录
+                new_reviews.append(ReviewRecord(question_id=q.id))
+        
+        # 合并复习列表
+        all_reviews = due_reviews + new_reviews
 
-        if not due_reviews:
-            click.echo("🎉 没有到期的复习题目！")
+        if not all_reviews:
+            click.echo("🎉 没有需要复习或新的题目！")
             return
 
         # 生成复习计划
-        questions = {q.id: q for q in self.question_manager.list_questions()}
         sessions = self.scheduler.generate_daily_review_plan(
-            due_reviews, questions, limit
+            all_reviews, questions, limit
         )
 
         if not sessions:
@@ -62,6 +82,8 @@ class LeetCodeFSRSCLI:
             return
 
         click.echo(f"📚 今日复习计划 ({len(sessions)} 题):")
+        if new_reviews:
+            click.echo(f"   (包含 {len(new_reviews)} 个新题目)")
         click.echo("=" * 50)
 
         completed_count = 0
