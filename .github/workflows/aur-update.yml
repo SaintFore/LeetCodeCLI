@@ -130,7 +130,7 @@ jobs:
       run: |
         # Copy updated files
         echo "Copying PKGBUILD file..."
-        cp PKGBUILD aur-repo-main/
+        cp aur-assets/PKGBUILD aur-repo-main/
 
         # Update version
         cd aur-repo-main
