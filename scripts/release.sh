@@ -34,7 +34,8 @@ echo "✅ Updated README.md"
 
 # 4. Update PKGBUILD (local copy)
 sed -i "s/^pkgver=.*/pkgver=$NEW_VERSION/" aur-assets/PKGBUILD
-echo "✅ Updated aur-assets/PKGBUILD"
+sed -i "s/^pkgver=.*/pkgver=$NEW_VERSION/" aur-assets/PKGBUILD.bin
+echo "✅ Updated aur-assets/PKGBUILD & PKGBUILD.bin"
 
 # 5. Git operations
 echo "📦 Committing changes..."
