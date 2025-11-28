@@ -33,7 +33,7 @@ class LeetCodeFSRSCLI:
         
         self.scheduler = ReviewScheduler(self.fsrs)
 
-    def practice(self, limit: int = 20, show_plan: bool = False):
+    def practice(self, limit: int = 10, show_plan: bool = False):
         """开始练习"""
         # 获取到期的复习记录
         due_reviews = self.storage_manager.get_due_reviews()
@@ -296,7 +296,7 @@ def cli(ctx):
 
 
 @cli.command()
-@click.option('--limit', default=20, help='每日复习题目数量限制')
+@click.option('--limit', default=10, help='每日复习题目数量限制')
 @click.option('--plan', is_flag=True, help='仅显示复习计划')
 def practice(limit, plan):
     """开始练习"""
