@@ -27,6 +27,9 @@ jobs:
 
       - name: Build binary
         run: |
+          # Ensure data directory exists (it might be ignored by git)
+          mkdir -p leetcode_fsrs_cli/data
+          
           # Create binary with PyInstaller
           pyinstaller --onefile \
             --name leetcode-fsrs \
