@@ -16,10 +16,13 @@ LeetCode FSRS CLI is a Python CLI application that implements a spaced repetitio
 - **Question Management** (`leetcode_fsrs_cli/leetcode.py`): Question data models and operations
 - **Review Scheduling** (`leetcode_fsrs_cli/scheduler.py`): Review prioritization and session management
 - **Data Storage** (`leetcode_fsrs_cli/storage.py`): JSON-based persistence using XDG standard directories
+- **Authentication** (`leetcode_fsrs_cli/auth.py`): Cookie-based authentication management
+- **API Client** (`leetcode_fsrs_cli/leetcode_api.py`): LeetCode GraphQL API client
+- **Synchronization** (`leetcode_fsrs_cli/sync.py`): Data synchronization logic
 
 ### Data Flow
 ```
-User Input → CLI → Business Logic → FSRS Algorithm → Storage
+User Input → CLI → Auth/Sync/Logic → FSRS Algorithm → Storage
 ```
 
 ## Development Commands
@@ -41,8 +44,14 @@ makepkg -si
 # Test CLI commands
 leetcode-fsrs --help
 leetcode-fsrs init
+leetcode-fsrs auth login  # New
+leetcode-fsrs sync        # New
 leetcode-fsrs practice
 leetcode-fsrs stats
+
+# Run integration tests
+python3 tests/test_real_cookie.py
+python3 tests/test_sync_real.py
 
 # Verify data persistence
 ls -la ~/.config/leetcode-fsrs-cli/

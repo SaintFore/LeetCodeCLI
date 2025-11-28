@@ -25,6 +25,34 @@
 
 ## 📝 AI维护记录
 
+### 2025-11-28: 实现真实 LeetCode 认证与同步功能
+**维护者**: GitHub Copilot
+**任务**: 重构项目以支持真实的 LeetCode 数据同步
+
+#### 主要变更
+1.  **认证模块 (`auth.py`)**:
+    *   实现了基于 Cookie 的认证机制。
+    *   添加了 `AuthManager` 类用于管理 Cookie 的保存、加载和验证。
+    *   CLI 新增 `auth login/logout/status` 命令。
+
+2.  **API 客户端 (`leetcode_api.py`)**:
+    *   实现了 `LeetCodeAPIClient`，支持 GraphQL 查询。
+    *   添加了 CSRF Token 自动解析和处理，解决了连接失败的问题。
+    *   实现了获取用户信息、最近提交记录和题目详情的接口。
+
+3.  **同步模块 (`sync.py`)**:
+    *   实现了 `SyncManager`，负责将远程题目同步到本地。
+    *   支持增量同步，自动获取新提交题目的详细信息（难度、标签、内容）。
+    *   CLI 新增 `sync` 命令。
+
+4.  **CLI 改进 (`cli.py`)**:
+    *   移除了手动的 `add` 和 `search` 命令，转为自动同步模式。
+    *   改进 `practice` 命令：当复习队列不足时，自动从已同步的新题目中补充练习。
+    *   新增 `info` 命令查看题目详情。
+
+5.  **测试**:
+    *   添加了集成测试 `tests/test_real_cookie.py` 和 `tests/test_sync_real.py` 验证真实连接。
+
 ### 2025-11-28: 修复AUR包自动更新问题
 **维护者**: Claude Code AI Assistant
 **任务**: 修复GitHub Actions工作流中.SRCINFO生成问题

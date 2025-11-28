@@ -74,10 +74,16 @@ pip install -e .
 # 1. 初始化项目
 leetcode-fsrs init
 
-# 2. 开始练习
+# 2. 登录 LeetCode (需要 Cookie)
+leetcode-fsrs auth login
+
+# 3. 同步题目数据
+leetcode-fsrs sync
+
+# 4. 开始练习
 leetcode-fsrs practice
 
-# 3. 查看统计
+# 5. 查看统计
 leetcode-fsrs stats
 ```
 
@@ -86,12 +92,13 @@ leetcode-fsrs stats
 | 命令 | 说明 | 示例 |
 |------|------|------|
 | `init` | 初始化项目 | `leetcode-fsrs init` |
+| `auth` | 认证管理 | `leetcode-fsrs auth login` |
+| `sync` | 同步题目 | `leetcode-fsrs sync` |
 | `practice` | 开始练习 | `leetcode-fsrs practice --limit 20` |
 | `stats` | 显示统计 | `leetcode-fsrs stats` |
 | `schedule` | 复习计划 | `leetcode-fsrs schedule` |
 | `list` | 列出题目 | `leetcode-fsrs list --difficulty easy` |
-| `search` | 搜索题目 | `leetcode-fsrs search "binary"` |
-| `add` | 添加题目 | `leetcode-fsrs add 1 "Two Sum" easy "array,hash-table"` |
+| `info` | 查看题目详情 | `leetcode-fsrs info 1` |
 
 ## 🧠 FSRS算法
 
