@@ -484,6 +484,9 @@ leetcode-fsrs --help
   - 修复 `aur-update.yml` 以支持 `leetcode-fsrs-cli-bin` 使用预编译二进制
   - 优化 AUR 更新流程，改为由 `release.yml` 完成后触发 (`workflow_run`)，解决 Token 权限问题
   - 使用 Artifact 传递版本号，确保工作流间版本一致性
+- **Bug修复**:
+  - 修复 `sync` 命令因使用截断的 Cookie 导致认证失败的问题
+  - 修复 `auth login` 未保存用户名导致 `auth status` 显示 unknown 的问题
 
 ---
 

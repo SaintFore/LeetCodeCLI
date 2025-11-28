@@ -523,8 +523,13 @@ def login():
         return
     
     if auth_manager.verify_cookie(cookie):
-        if auth_manager.save_cookie(cookie.strip()):
-            click.echo("✅ Cookie已保存成功！")
+        # 获取用户名
+        from .leetcode_api import LeetCodeAPIClient
+        client = LeetCodeAPIClient(cookie=cookie)
+        username = client.get_current_username()
+        
+        if auth_manager.save_cookie(cookie.strip(), user_id=username):
+            click.echo(f"✅ 登录成功！欢迎, {username or 'User'}")
             click.echo("📝 下一步: 运行 'leetcode-fsrs sync' 同步您的题目")
         else:
             click.echo("❌ 保存Cookie失败")

@@ -203,9 +203,10 @@ def client_from_saved_cookie() -> Optional[LeetCodeAPIClient]:
     from .auth import AuthManager
     
     auth_manager = AuthManager()
-    auth_info = auth_manager.get_auth_info()
+    auth_manager = AuthManager()
+    cookie = auth_manager.load_cookie()
     
-    if not auth_info.get("authenticated"):
+    if not cookie:
         return None
         
-    return LeetCodeAPIClient(cookie=auth_info.get("cookie"))
+    return LeetCodeAPIClient(cookie=cookie)
