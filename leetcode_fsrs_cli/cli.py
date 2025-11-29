@@ -508,7 +508,7 @@ def login():
     click.echo("- LEETCODE_SESSION=xxx")
     click.echo("- 完整Cookie字符串")
     
-    cookie = click.prompt("\n请粘贴Cookie内容", hide_input=True)
+    cookie = click.prompt("\n请粘贴Cookie内容")
     
     if not cookie or len(cookie.strip()) < 10:
         click.echo("❌ Cookie太短或为空，请重试")

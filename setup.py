@@ -59,6 +59,7 @@ setup(
     entry_points={
         "console_scripts": [
             "leetcode-fsrs=leetcode_fsrs_cli.cli:cli",
+            "lcf=leetcode_fsrs_cli.cli:cli",
         ],
     },
     include_package_data=True,

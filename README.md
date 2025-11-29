@@ -8,6 +8,8 @@
 [![Python](https://img.shields.io/badge/Python-3.8+-green?style=for-the-badge&logo=python)](https://www.python.org/)
 [![License](https://img.shields.io/badge/License-MIT-purple?style=for-the-badge)](LICENSE)
 
+> **Tip**: 使用 `lcf` 作为 `leetcode-fsrs` 的简写命令。
+
 ---
 
 ## 🚀 为什么选择 LeetCode FSRS?
@@ -69,6 +71,8 @@ pip install .
 
 ```bash
 leetcode-fsrs auth login
+# 或者
+lcf auth login
 ```
 > *提示: 登录后 Cookie 会安全保存在本地，用于同步题目状态。*
 

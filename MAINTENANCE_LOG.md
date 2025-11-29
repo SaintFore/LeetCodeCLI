@@ -531,7 +531,12 @@ leetcode-fsrs --help
 
 - **文档更新 (v1.6.4)**:
   - 更新 `README.md`，添加新功能说明
+  - 更新 `README.md`，添加新功能说明
   - 重命名 `CLAUDE.md` 为 `AI_CONTEXT.md`，并更新内容为通用 AI 上下文
+
+- **体验优化 (v1.6.4)**:
+  - 优化 `auth login` 交互，显示 Cookie 输入内容，方便粘贴确认
+  - 新增 `lcf` 命令别名，作为 `leetcode-fsrs` 的简写
 
 ---
 

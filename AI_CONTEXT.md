@@ -20,6 +20,8 @@ This file provides context and guidance for AI assistants working on this reposi
 - **API Client** (`leetcode_fsrs_cli/leetcode_api.py`): LeetCode GraphQL API client.
 - **Synchronization** (`leetcode_fsrs_cli/sync.py`): Data synchronization logic.
 
+**Note**: `lcf` is available as a short alias for `leetcode-fsrs`.
+
 ### Data Flow
 ```
 User Input → CLI → Auth/Sync/Logic → FSRS Algorithm → Storage
