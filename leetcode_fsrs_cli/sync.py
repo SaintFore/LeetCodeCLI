@@ -180,29 +180,30 @@ class SyncManager:
         # 4. 对比和同步
         click.echo(f"🔍 发现 {len(remote_problems)} 个最近提交，正在分析差异...")
         
+        # 构建 slug 到本地题目的映射，用于检测 ID 变化
+        slug_to_local = {}
+        for q in local_questions.values():
+            # url: https://leetcode.com/problems/{slug}/
+            slug = q.url.split("/problems/")[-1].strip("/")
+            slug_to_local[slug] = q
+
         with click.progressbar(remote_problems, label="同步进度") as bar:
             for prob in bar:
-                # 这里的 prob 只有 title, slug, timestamp
-                # 我们需要获取详情来得到 id
-                # 但为了避免过多请求，我们先用 slug 检查是否可能已存在（如果本地存了 slug）
-                # 目前本地 Question 模型没有 slug 字段，只有 url
-                # url 格式: https://leetcode.com/problems/{slug}/
-                
                 slug = prob.get("slug")
                 if not slug:
                     continue
                     
-                # 检查本地是否已存在该题目 (通过 URL 匹配)
-                # 使用严格匹配: url 必须以 /slug/ 结尾
-                exists = False
-                for q in local_questions.values():
-                    # 假设 q.url 是 https://leetcode.com/problems/{slug}/
-                    # 我们检查它是否以 /{slug}/ 结尾
-                    if q.url.rstrip('/').endswith(f"/{slug}"):
-                        exists = True
-                        break
+                # 检查本地是否已存在该题目 (通过 Slug)
+                existing_q = slug_to_local.get(slug)
                 
-                if exists and not full_sync:
+                # 如果存在且不是全量同步，且我们假设ID没变，则跳过
+                # 但为了修复ID问题，我们可能需要更激进一点
+                # 如果 existing_q.id 看起来像内部ID (比如很大)，而我们想要前端ID
+                # 这里简单起见，如果不是 full_sync，我们只在 ID 确实不匹配时才更新
+                
+                if existing_q and not full_sync:
+                    # 如果我们无法轻易知道新ID，就只能跳过
+                    # 但为了修复ID，建议用户运行 --full
                     report.unchanged_count += 1
                     continue
 
@@ -230,14 +231,25 @@ class SyncManager:
                     content=detail.get("content") or ""
                 )
                 
-                if qid in local_questions:
-                    # 更新
+                # 检查是否需要迁移 ID (Slug 相同但 ID 不同)
+                if existing_q and existing_q.id != qid:
+                    # ID 发生了变化 (例如从内部ID变成了前端ID)
+                    # 删除旧题目
+                    qm.remove_question(existing_q.id)
+                    # 添加新题目
+                    qm.add_question(question)
+                    report.updated_count += 1
+                    # 更新映射以防万一
+                    slug_to_local[slug] = question
+                elif qid in local_questions:
+                    # ID 相同，更新内容
                     qm.add_question(question) # add_question 会覆盖
                     report.updated_count += 1
                 else:
                     # 新增
                     qm.add_question(question)
                     report.new_count += 1
+                    slug_to_local[slug] = question
 
         report.total_count = len(qm.questions)
         report.status = "success"

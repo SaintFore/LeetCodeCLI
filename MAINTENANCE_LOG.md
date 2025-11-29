@@ -522,6 +522,15 @@ leetcode-fsrs --help
 
 ---
 
-**维护记录更新**: 2025-11-28 by Antigravity AI Assistant
+
+- **Bug修复 (v1.6.4)**:
+  - 修复 CLI 显示内部 ID 而非前端 ID 的问题
+  - 修复 `sync` 模块以正确处理 ID 迁移
+  - 修复 CLI 输出中过多的空白行
+  - 优化 `practice` 命令，默认隐藏题目描述，增加 `--show-content` 选项
+
+---
+
+**维护记录更新**: 2025-11-29 by Antigravity AI Assistant
 
 这个文档将持续更新，记录所有重要的维护活动和项目变更。

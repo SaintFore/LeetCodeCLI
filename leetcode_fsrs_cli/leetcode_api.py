@@ -179,6 +179,7 @@ class LeetCodeAPIClient:
         query questionData($titleSlug: String!) { 
             question(titleSlug: $titleSlug) { 
                 questionId 
+                questionFrontendId
                 title 
                 titleSlug 
                 content 
@@ -210,7 +211,7 @@ class LeetCodeAPIClient:
             tags = [tag["name"] for tag in q.get("topicTags", [])]
 
             return {
-                "id": int(q.get("questionId")) if q.get("questionId") else None,
+                "id": int(q.get("questionFrontendId")) if q.get("questionFrontendId") and q.get("questionFrontendId").isdigit() else int(q.get("questionId")),
                 "title": q.get("title"),
                 "slug": q.get("titleSlug"),
                 "difficulty": q.get("difficulty"),

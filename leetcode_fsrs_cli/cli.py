@@ -33,7 +33,7 @@ class LeetCodeFSRSCLI:
         
         self.scheduler = ReviewScheduler(self.fsrs)
 
-    def practice(self, limit: int = 10, show_plan: bool = False):
+    def practice(self, limit: int = 10, show_plan: bool = False, show_content: bool = False):
         """开始练习"""
         # 获取到期的复习记录
         due_reviews = self.storage_manager.get_due_reviews()
@@ -83,7 +83,6 @@ class LeetCodeFSRSCLI:
                 click.echo(f"{i}. {question.id}. {question.title}")
                 click.echo(f"   难度: {question.difficulty}")
                 click.echo(f"   优先级: {session.priority:.2f}")
-                click.echo()
 
             if len(sessions) > 20:
                 click.echo(f"... 还有 {len(sessions) - 20} 题")
@@ -109,7 +108,7 @@ class LeetCodeFSRSCLI:
             click.echo(f"稳定性: {review.stability:.2f} | 难度系数: {review.difficulty:.2f}")
             click.echo("-" * 50)
             
-            if question.content:
+            if show_content and question.content:
                 # 显示题目内容摘要 (去除HTML)
                 clean_content = self._strip_html(question.content)
                 content_preview = clean_content[:500] + "..." if len(clean_content) > 500 else clean_content
@@ -231,7 +230,7 @@ class LeetCodeFSRSCLI:
             output.append(f"   状态: {status_str}")
             if next_review_str:
                 output.append(next_review_str)
-            output.append("")
+            # output.append("") # 移除多余空行
         
         click.echo_via_pager("\n".join(output))
 
@@ -298,10 +297,11 @@ def cli(ctx):
 @cli.command()
 @click.option('--limit', default=10, help='每日复习题目数量限制')
 @click.option('--plan', is_flag=True, help='仅显示复习计划')
-def practice(limit, plan):
+@click.option('--show-content', is_flag=True, help='显示题目描述')
+def practice(limit, plan, show_content):
     """开始练习"""
     cli_obj = LeetCodeFSRSCLI()
-    cli_obj.practice(limit, show_plan=plan)
+    cli_obj.practice(limit, show_plan=plan, show_content=show_content)
 
 
 @cli.command()
