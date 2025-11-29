@@ -60,6 +60,8 @@ cd LeetCodeCLI
 
 # 安装
 pip install .
+
+# 注意: 如果你是从旧版本更新，请重新安装以启用 lcf 别名
 ```
 
 ---
