@@ -529,6 +529,10 @@ leetcode-fsrs --help
   - 修复 CLI 输出中过多的空白行
   - 优化 `practice` 命令，默认隐藏题目描述，增加 `--show-content` 选项
 
+- **文档更新 (v1.6.4)**:
+  - 更新 `README.md`，添加新功能说明
+  - 重命名 `CLAUDE.md` 为 `AI_CONTEXT.md`，并更新内容为通用 AI 上下文
+
 ---
 
 **维护记录更新**: 2025-11-29 by Antigravity AI Assistant

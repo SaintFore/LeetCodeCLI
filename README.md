@@ -78,6 +78,8 @@ leetcode-fsrs auth login
 ```bash
 leetcode-fsrs sync
 ```
+*   **智能同步**: 自动识别题目 ID 变化，避免重复。
+*   **全量同步**: 使用 `--full` 选项进行完整同步。
 
 ### 3. ⚔️ 开始练习 (核心功能)
 启动每日复习！系统会根据算法自动筛选出你最需要复习的题目。
@@ -87,6 +89,7 @@ leetcode-fsrs practice
 ```
 *   **智能推荐**: 自动混合新题和复习题。
 *   **默认限制**: 每天默认推荐 **10** 道题 (可通过 `--limit` 修改)。
+*   **题目描述**: 默认隐藏，使用 `--show-content` 显示。
 *   **评分反馈**: 练习后根据回忆难度打分 (1-5)，算法自动调整下次复习时间。
 
 ### 4. 📊 查看统计
@@ -102,7 +105,7 @@ leetcode-fsrs stats
 
 | 命令 | 描述 | 示例 |
 | :--- | :--- | :--- |
-| `practice` | **开始练习** (默认 10 题) | `leetcode-fsrs practice` |
+| `practice` | **开始练习** (默认 10 题) | `leetcode-fsrs practice --show-content` |
 | `sync` | **同步** LeetCode 数据 | `leetcode-fsrs sync` |
 | `auth` | **认证** 管理 | `leetcode-fsrs auth status` |
 | `stats` | 查看 **统计** | `leetcode-fsrs stats` |
