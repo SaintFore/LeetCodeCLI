@@ -118,8 +118,9 @@ leetcode-fsrs-cli/
 │   ├── leetcode_api.py         # API Client
 │   └── data/                   # Default configuration data
 ├── setup.py                    # Package configuration
-├── PKGBUILD                    # Arch Linux package script
-├── .SRCINFO                    # AUR metadata
+├── aur-assets/                 # AUR package files
+│   ├── PKGBUILD                # Arch Linux package script
+│   └── .SRCINFO                # AUR metadata
 ├── requirements.txt            # Python dependencies
 └── Documentation files
 ```
