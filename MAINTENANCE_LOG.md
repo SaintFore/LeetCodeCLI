@@ -540,6 +540,10 @@ leetcode-fsrs --help
 
 ---
 
-**维护记录更新**: 2025-11-29 by Antigravity AI Assistant
+**维护记录更新**: 2025-11-30 by Antigravity AI Assistant
+
+- **Bug修复 (AUR Binary)**:
+  - 修复 `leetcode-fsrs-cli-bin` AUR 包中缺失 `lcf` 软链接的问题
+  - 更新 `PKGBUILD.bin`，在安装后手动创建 `lcf` -> `leetcode-fsrs` 的符号链接
 
 这个文档将持续更新，记录所有重要的维护活动和项目变更。

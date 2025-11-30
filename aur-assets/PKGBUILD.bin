@@ -19,6 +19,7 @@ sha256sums=('SKIP' 'SKIP' 'SKIP')
 package() {
   # Install binary
   install -Dm755 "${pkgname}-${pkgver}" "$pkgdir/usr/bin/leetcode-fsrs"
+  ln -s leetcode-fsrs "$pkgdir/usr/bin/lcf"
   
   # Install license
   install -Dm644 LICENSE "$pkgdir/usr/share/licenses/$pkgname/LICENSE"
