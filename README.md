@@ -1,88 +1,104 @@
-# 🚀 LEETCODE FSRS CLI
+# LeetCode FSRS
+
+一个以 Textual TUI 为主、Typer CLI 为辅的 LeetCode 间隔复习工具。调度由官方 `py-fsrs` 完成；多设备复制交给 Syncthing、WebDAV 客户端等成熟工具。
+
+## 安装
+
+需要 Python 3.11+。
+
+```bash
+python -m venv .venv
+.venv/bin/pip install -e .
+```
+
+启动 TUI：
+
+```bash
+leetcode-fsrs
+```
+
+首次启动会询问：
+
+- 一个外部同步工具管理的共享目录；
+- 固定的 IANA 时区，例如 `Asia/Shanghai`；
+- 可选的 LeetCode 用户名。
+
+也可以无交互初始化：
+
+```bash
+leetcode-fsrs init ~/Sync/leetcode-fsrs --timezone Asia/Shanghai --username YOUR_NAME
+```
+
+## LeetCode 导入
+
+Cookie 只保存在本机系统 keyring，不会进入共享目录：
+
+```bash
+leetcode-fsrs auth login
+leetcode-fsrs import-accepted
+```
+
+无可用 keyring 时，不会把 Cookie 降级保存到明文文件。可在当前 shell 中使用：
+
+```bash
+export LEETCODE_SESSION='...'
+leetcode-fsrs import-accepted
+```
+
+导入会缓存题目目录，并将新的 Accepted 题目登记为新卡片；它不会伪造一次 FSRS 评分。
+
+## 日常流程
+
+Today 队列默认最多 20 题，其中新题最多 5 题；到期复习先于新题。选择题目后：
+
+1. 打开解题器；TUI 暂停并启动外部程序。
+2. 退出解题器后，选择 Again、Hard、Good 或 Easy。
+3. 不想评分时选择“跳过”。
+
+默认解题器命令是 `nvim +Leet`，适配 `kawre/leetcode.nvim` 的 dashboard。也可使用占位符配置任意命令：
+
+```bash
+leetcode-fsrs config solver 'nvim +Leet'
+leetcode-fsrs config solver 'my-solver {slug} {url}'
+```
+
+进程还会收到 `LEETCODE_FSRS_KEY`、`LEETCODE_FSRS_SLUG` 和 `LEETCODE_FSRS_URL` 环境变量。
+
+## CLI
+
+```bash
+leetcode-fsrs today [--json]
+leetcode-fsrs rate two-sum good
+leetcode-fsrs card enroll two-sum
+leetcode-fsrs card suspend two-sum
+leetcode-fsrs card resume two-sum
+leetcode-fsrs config set daily_limit 20
+leetcode-fsrs status
+```
+
+## 多设备同步与两层存储
+
+共享目录是事实来源，只包含清单和不可变事件：
 
 ```text
-    __                   __  ______             __             
-   / /   ___   ___  / /_ / ____/____  ____/ /___         
-  / /   / _ \ / _ \/ __// /    / __ \/ __  / _ \        
- / /___/  __//  __/ /_ / /___ / /_/ / /_/ /  __/        
-/_____/\___/ \___/\__/ \____/ \____/\__,_/\___/         
-    ___________ ____  _____     ________    ____ 
-   / ____/ ___// __ \/ ___/    / ____/ /   /  _/ 
-  / /_   \__ \/ /_/ /\__ \    / /   / /    / /   
- / __/  ___/ / _, _/___/ /   / /___/ /____/ /    
-/_/    /____/_/ |_|/____/    \____/_____/___/    
-                                                 
+shared-directory/
+├── library.json
+└── events/
+    ├── <device-a>/<UTC-day>.ndjson
+    └── <device-b>/<UTC-day>.ndjson
 ```
 
-<div align="center">
+每台设备另有本地 SQLite 投影，用于快速查询；它可以随时由事件重建，因此不要同步 SQLite。这里的“两层”不是保存两份都需要合并的数据，而是“可同步事实 + 可丢弃索引”。
 
-[![Python](https://img.shields.io/badge/Python-3776AB?style=for-the-badge&logo=python&logoColor=white)](https://www.python.org/)
-[![FSRS](https://img.shields.io/badge/Algorithm-FSRS-orange?style=for-the-badge)](https://github.com/open-spaced-repetition/fsrs.js)
-[![LeetCode](https://img.shields.io/badge/LeetCode-FFA116?style=for-the-badge&logo=leetcode&logoColor=black)](https://leetcode.com/)
-[![License](https://img.shields.io/badge/License-MIT-blue.svg?style=for-the-badge)](LICENSE)
+文件数量按“活跃设备 × 活跃 UTC 天数”增长，不是每次复习一个文件。单设备每天最多一个事件文件；一年约 365 个小文件。损坏的完整行会被报告并跳过，写到一半的最后一行会等同步完成后再读取。
 
-**"Master the grind with scientific spaced repetition."**
-用科学的间隔复习算法，终结 LeetCode 苦旅。
+完整说明见 [同步与恢复](docs/sync.md) 和 [架构](docs/architecture.md)。
 
-[Installation](#installation) • [Usage](#usage) • [Features](#features) • [Algorithm](#fsrs-algorithm)
+## 开发
 
-</div>
-
----
-
-## ⚡ What is LeetCode FSRS?
-
-**LeetCode FSRS CLI** 是一个将 **FSRS (Free Spaced Repetition Scheduler)** 算法注入刷题流程的硬核工具。它不仅仅是帮你记录题目，更是根据你的记忆曲线，智能计算每一道题的最优复习时间，确保你以最少的时间成本实现最高的知识留存。
-
-**让每一道题都刻进你的长期记忆。**
-
-## 🚀 Features
-
-- **🧠 FSRS-Powered Mastery**: 基于最前沿的间隔复习算法，智能动态调整复习计划。
-- **🔄 Seamless Account Sync**: 自动同步 LeetCode 提交历史与题目列表，无需手动录入。
-- **📊 Deep Learning Analytics**: 提供详尽的学习统计报表，量化你的成长轨迹。
-- **⚙️ Hyper-Configurable Engine**: 从权重参数到每日上限，每一处细节皆可定制。
-- **💻 Cross-Platform**: 完美运行于 Windows, macOS 与 Linux。
-
-## 📦 Installation
-
-### PyPI 安装 (推荐)
 ```bash
-pip install leetcode-fsrs-cli
+.venv/bin/pip install -e '.[test]'
+.venv/bin/pytest -q
 ```
 
-### 源码构建
-```bash
-git clone https://github.com/SaintFore/LeetCodeCLI.git
-cd LeetCodeCLI
-pip install .
-```
-
-## 💻 Usage
-
-1.  **身份认证**: 
-    ```bash
-    leetcode-fsrs auth login
-    ```
-2.  **数据同步**: 
-    ```bash
-    leetcode-fsrs sync
-    ```
-3.  **开始修行**: 
-    ```bash
-    leetcode-fsrs practice
-    ```
-4.  **洞察进度**: 
-    ```bash
-    leetcode-fsrs stats
-    ```
-
-## 📄 Algorithm
-
-本项目核心采用 **FSRS** 算法。相比传统的 Anki SM-2 算法，FSRS 能更好地适应个人记忆差异，显著提升复习效率。
-
----
-
-<div align="center">
-Created with 🚀 by <a href="https://github.com/SaintFore">SaintFore</a>
-</div>
+旧版 JSON 不自动迁移；2.0 从新的事件库开始。

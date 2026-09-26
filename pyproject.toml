@@ -1,0 +1,37 @@
+[build-system]
+requires = ["setuptools>=77"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "leetcode-fsrs"
+version = "2.0.0"
+description = "A terminal-first LeetCode review planner powered by FSRS"
+readme = "README.md"
+requires-python = ">=3.11"
+license = "MIT"
+authors = [{ name = "SaintFore" }]
+dependencies = [
+  "fsrs>=6.3,<7",
+  "keyring>=25,<26",
+  "requests>=2.32,<3",
+  "textual>=8.2,<9",
+  "typer>=0.27,<0.28",
+]
+
+[project.optional-dependencies]
+optimizer = ["fsrs[optimizer]>=6.3,<7; python_version >= '3.12' and python_version < '3.14'"]
+test = [
+  "pytest>=8.4,<9",
+  "pytest-asyncio>=1.2,<2",
+]
+
+[project.scripts]
+leetcode-fsrs = "leetcode_fsrs.cli:main"
+
+[tool.setuptools.packages.find]
+include = ["leetcode_fsrs*"]
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+testpaths = ["tests"]
+
