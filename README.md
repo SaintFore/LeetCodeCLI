@@ -6,6 +6,26 @@
 
 需要 Python 3.11+。
 
+### Arch Linux / paru
+
+开发版本用于正式发版前验收：
+
+```bash
+paru -S leetcode-fsrs-git
+```
+
+如果 AUR 元数据尚未发布，可以直接从仓库构建并安装；`paru` 会同时解析 AUR 中的 `python-fsrs`：
+
+```bash
+git clone https://github.com/SaintFore/LeetCodeCLI.git
+cd LeetCodeCLI
+scripts/build_arch_package.sh -i
+```
+
+GitHub Actions 的 **Build Arch package** 工作流会在 `main` 的相关文件变化后构建并上传 `.pkg.tar.zst`。首次创建或更新 AUR 元数据时，手动运行该工作流并启用 `publish_aur`；仓库需要配置 `AUR_SSH_PRIVATE_KEY` secret。
+
+### Python
+
 ```bash
 python -m venv .venv
 .venv/bin/pip install -e .

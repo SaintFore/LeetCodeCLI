@@ -1,0 +1,87 @@
+name: Build Arch package
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "leetcode_fsrs/**"
+      - "tests/**"
+      - "packaging/aur-git/**"
+      - "pyproject.toml"
+      - "README.md"
+      - "LICENSE"
+      - ".github/workflows/arch-package.yml"
+  workflow_dispatch:
+    inputs:
+      publish_aur:
+        description: "Publish leetcode-fsrs-git metadata to the AUR"
+        required: false
+        default: false
+        type: boolean
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    container: archlinux:base-devel
+    steps:
+      - name: Prepare Arch build environment
+        run: pacman -Syu --noconfirm git sudo python python-build python-installer python-keyring python-pytest python-pytest-asyncio python-requests python-setuptools python-textual python-typer python-wheel
+
+      - uses: actions/checkout@v4
+
+      - name: Create unprivileged package builder
+        run: |
+          useradd --create-home builder
+          echo "builder ALL=(ALL:ALL) NOPASSWD: ALL" > /etc/sudoers.d/builder
+          chown -R builder:builder "$GITHUB_WORKSPACE"
+
+      - name: Build and install AUR dependency
+        run: |
+          sudo -u builder git clone https://aur.archlinux.org/python-fsrs.git /tmp/python-fsrs
+          sudo -u builder bash -lc 'cd /tmp/python-fsrs && makepkg --syncdeps --install --noconfirm --needed'
+
+      - name: Build package and run checks
+        run: sudo -u builder bash -lc "cd '$GITHUB_WORKSPACE/packaging/aur-git' && makepkg --syncdeps --cleanbuild --noconfirm --needed"
+
+      - name: Inspect package
+        run: |
+          package=$(find packaging/aur-git -maxdepth 1 -name '*.pkg.tar.zst' -print -quit)
+          test -n "$package"
+          pacman -Qip "$package"
+          pacman -Qlp "$package" | grep -E '/usr/bin/leetcode-fsrs$'
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: leetcode-fsrs-arch-package
+          path: packaging/aur-git/*.pkg.tar.zst
+          if-no-files-found: error
+
+  publish-aur:
+    if: github.event_name == 'workflow_dispatch' && inputs.publish_aur
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: webfactory/ssh-agent@v0.9.1
+        with:
+          ssh-private-key: ${{ secrets.AUR_SSH_PRIVATE_KEY }}
+
+      - name: Publish AUR metadata
+        env:
+          AUR_NAME: leetcode-fsrs-git
+        run: |
+          mkdir -p ~/.ssh
+          ssh-keyscan aur.archlinux.org >> ~/.ssh/known_hosts
+          git clone "ssh://aur@aur.archlinux.org/${AUR_NAME}.git" aur-package
+          cp packaging/aur-git/PKGBUILD packaging/aur-git/.SRCINFO aur-package/
+          cd aur-package
+          git config user.name "SaintFore release bot"
+          git config user.email "forevergoodforest@outlook.com"
+          git add PKGBUILD .SRCINFO
+          if git diff --cached --quiet; then
+            echo "AUR metadata is already current."
+            exit 0
+          fi
+          git commit -m "Publish ${AUR_NAME} packaging"
+          git push origin master
