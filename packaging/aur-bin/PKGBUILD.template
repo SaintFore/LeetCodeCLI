@@ -1,0 +1,23 @@
+# Maintainer: SaintFore <forevergoodforest@outlook.com>
+
+pkgname=leetcode-fsrs-bin
+pkgver=@VERSION@
+pkgrel=1
+pkgdesc="Terminal-first LeetCode review planner powered by FSRS (prebuilt binary)"
+arch=('x86_64')
+url="https://github.com/SaintFore/LeetCodeCLI"
+license=('MIT')
+depends=('glibc' 'zlib')
+provides=('leetcode-fsrs')
+conflicts=('leetcode-fsrs' 'leetcode-fsrs-git' 'leetcode-fsrs-cli' 'leetcode-fsrs-cli-bin')
+options=('!strip' '!debug')
+source=("${pkgname}-${pkgver}.tar.gz::${url}/releases/download/v${pkgver}/leetcode-fsrs-${pkgver}-linux-x86_64.tar.gz")
+sha256sums=('@SHA256@')
+
+package() {
+  cd "leetcode-fsrs-${pkgver}-linux-x86_64"
+  install -Dm755 leetcode-fsrs "$pkgdir/usr/bin/leetcode-fsrs"
+  install -Dm644 leetcode-fsrs.desktop "$pkgdir/usr/share/applications/leetcode-fsrs.desktop"
+  install -Dm644 leetcode-fsrs.png "$pkgdir/usr/share/icons/hicolor/1024x1024/apps/leetcode-fsrs.png"
+  install -Dm644 LICENSE "$pkgdir/usr/share/licenses/$pkgname/LICENSE"
+}

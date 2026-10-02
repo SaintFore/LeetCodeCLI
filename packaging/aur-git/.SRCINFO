@@ -20,6 +20,7 @@ pkgbase = leetcode-fsrs-git
 	depends = python-typer>=0.27
 	provides = leetcode-fsrs
 	conflicts = leetcode-fsrs
+	conflicts = leetcode-fsrs-bin
 	conflicts = leetcode-fsrs-cli
 	conflicts = leetcode-fsrs-cli-bin
 	source = leetcode-fsrs::git+https://github.com/SaintFore/LeetCodeCLI.git#branch=main

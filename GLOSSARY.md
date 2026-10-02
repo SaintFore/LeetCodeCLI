@@ -32,3 +32,19 @@ The due-first bounded queue produced from active cards. By default it contains a
 
 **Solver**:
 An external process, normally Neovim with `leetcode.nvim`, launched while the TUI is suspended. Solving and review grading are deliberately separate actions.
+
+**Study Preference**:
+A learning setting recorded as a Study Event and replicated between devices, such as timezone, plan limits, desired retention, or interface language.
+_Avoid_: Local Setting, Config
+
+**Device Setting**:
+A setting stored only on one device and never replicated through the Study Library, such as the Solver command or shared-directory location.
+_Avoid_: Study Preference, Portable Setting
+
+**Binary Package**:
+The versioned `leetcode-fsrs-bin` AUR package, installed from a prebuilt official GitHub Release artifact.
+_Avoid_: Development Package
+
+**Development Package**:
+The rolling `leetcode-fsrs-git` AUR package, built from the current `main` branch.
+_Avoid_: Binary Package

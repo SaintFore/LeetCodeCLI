@@ -7,6 +7,7 @@ on:
       - "leetcode_fsrs/**"
       - "tests/**"
       - "packaging/aur-git/**"
+      - "packaging/desktop/**"
       - "pyproject.toml"
       - "README.md"
       - "LICENSE"
@@ -49,6 +50,7 @@ jobs:
           test -n "$package"
           pacman -Qip "$package"
           pacman -Qlp "$package" | grep -E '/usr/bin/leetcode-fsrs$'
+          pacman -Qlp "$package" | grep -E '/usr/share/applications/leetcode-fsrs.desktop$'
 
       - uses: actions/upload-artifact@v7
         with:

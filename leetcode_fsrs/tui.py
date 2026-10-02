@@ -4,7 +4,8 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from pathlib import Path
-from typing import ClassVar
+from typing import Any, ClassVar, cast
+from zoneinfo import ZoneInfo
 
 from textual.app import App, ComposeResult
 from textual.binding import Binding, BindingType
@@ -17,6 +18,7 @@ from textual.widgets import (
     Header,
     Input,
     Label,
+    Select,
     Static,
     TabbedContent,
     TabPane,
@@ -24,7 +26,7 @@ from textual.widgets import (
 )
 
 from .credentials import CredentialStore
-from .domain import PlanItem, Rating
+from .domain import PlanItem, Rating, StudyPreferences
 from .leetcode_client import LeetCodeClient, LeetCodeError
 from .services import ApplicationError, ApplicationService, CardState, LibraryAccess
 from .solver import run_solver
@@ -106,6 +108,11 @@ class LeetCodeFsrsApp(App[None]):
     .toolbar Button { margin-right: 1; }
     DataTable { height: 1fr; }
     #stats, #data-status, #settings { padding: 1 2; }
+    #settings { overflow-y: auto; }
+    #settings Input, #settings Select { width: 48; margin-bottom: 1; }
+    .settings-title { text-style: bold; margin-top: 1; }
+    .settings-help { color: $text-muted; margin-bottom: 1; }
+    .settings-status { min-height: 1; color: $text-muted; }
     """
 
     def __init__(self, service: ApplicationService | None = None) -> None:
@@ -115,6 +122,7 @@ class LeetCodeFsrsApp(App[None]):
         self.plan_items: list[PlanItem] = []
         self.current_key: str | None = None
         self.solved_key: str | None = None
+        self._settings_baseline: StudyPreferences | None = None
 
     def compose(self) -> ComposeResult:
         yield Header()
@@ -154,13 +162,45 @@ class LeetCodeFsrsApp(App[None]):
                     ),
                     id="import-accepted",
                 )
-            with TabPane(self._text("设置", "Settings"), id="settings-tab"):
-                yield Static(id="settings")
+            with (
+                TabPane(self._text("设置", "Settings"), id="settings-tab"),
+                Vertical(id="settings"),
+            ):
+                yield Label("", id="settings-study-title", classes="settings-title")
+                yield Static("", id="settings-study-help", classes="settings-help")
+                yield Label("", id="settings-timezone-label")
+                yield Input(id="settings-timezone")
+                yield Label("", id="settings-daily-label")
+                yield Input(id="settings-daily")
+                yield Label("", id="settings-new-label")
+                yield Input(id="settings-new")
+                yield Label("", id="settings-retention-label")
+                yield Input(id="settings-retention")
+                yield Label("", id="settings-language-label")
+                yield Select(
+                    [("中文", "zh"), ("English", "en")],
+                    allow_blank=False,
+                    id="settings-language",
+                )
+                with Horizontal(classes="toolbar"):
+                    yield Button("", id="settings-study-save", variant="primary")
+                    yield Button("", id="settings-study-reset")
+                yield Static("", id="settings-study-status", classes="settings-status")
+                yield Label("", id="settings-device-title", classes="settings-title")
+                yield Static("", id="settings-device-help", classes="settings-help")
+                yield Label("", id="settings-solver-label")
+                yield Input(id="settings-solver")
+                with Horizontal(classes="toolbar"):
+                    yield Button("", id="settings-device-save", variant="primary")
+                    yield Button("", id="settings-device-reset")
+                yield Static("", id="settings-device-status", classes="settings-status")
+                yield Static("", id="settings-advanced", classes="settings-help")
         yield Label("", id="health")
         yield Footer()
 
     def on_mount(self) -> None:
         self._setup_tables()
+        self._apply_language()
         if self.service.health().access is LibraryAccess.UNCONFIGURED:
             self.push_screen(SetupScreen(), self._finish_setup)
         else:
@@ -199,23 +239,89 @@ class LeetCodeFsrsApp(App[None]):
     def _text(self, chinese: str, english: str) -> str:
         return english if self.english else chinese
 
+    def _apply_language(self) -> None:
+        labels = {
+            "today": self._text("今日", "Today"),
+            "questions": self._text("题库", "Questions"),
+            "stats-tab": self._text("统计", "Stats"),
+            "data-tab": self._text("数据", "Data"),
+            "settings-tab": self._text("设置", "Settings"),
+        }
+        for pane_id, label in labels.items():
+            cast(Any, self.query_one(f"#--content-tab-{pane_id}")).label = label
+        button_labels = {
+            "solve": self._text("打开解题器", "Open solver"),
+            "skip": self._text("跳过", "Skip"),
+            "enroll": self._text("加入复习", "Enroll"),
+            "suspend": self._text("暂停", "Suspend"),
+            "resume": self._text("恢复", "Resume"),
+            "import-accepted": self._text(
+                "从 LeetCode 导入 Accepted", "Import Accepted from LeetCode"
+            ),
+            "settings-study-save": self._text("保存学习偏好", "Save preferences"),
+            "settings-study-reset": self._text("重置", "Reset"),
+            "settings-device-save": self._text("保存本机设置", "Save device settings"),
+            "settings-device-reset": self._text("重置", "Reset"),
+        }
+        for button_id, label in button_labels.items():
+            self.query_one(f"#{button_id}", Button).label = label
+        self.query_one("#question-search", Input).placeholder = self._text(
+            "搜索标题、slug 或题号", "Search title, slug, or ID"
+        )
+        fixed_text = {
+            "settings-study-title": self._text("学习偏好", "Study Preferences"),
+            "settings-study-help": self._text(
+                "这些设置通过 Study Library 在设备间复制。",
+                "These settings replicate between devices through the Study Library.",
+            ),
+            "settings-timezone-label": self._text("IANA 时区", "IANA timezone"),
+            "settings-daily-label": self._text("每日上限", "Daily limit"),
+            "settings-new-label": self._text("新题上限", "New-card limit"),
+            "settings-retention-label": self._text(
+                "期望记忆率（建议 0.80–0.95）",
+                "Desired retention (0.80–0.95 recommended)",
+            ),
+            "settings-language-label": self._text("界面语言", "Interface language"),
+            "settings-device-title": self._text("此设备", "This Device"),
+            "settings-device-help": self._text(
+                "这些设置只保存在当前设备。",
+                "These settings remain on this device.",
+            ),
+            "settings-solver-label": self._text("解题器命令", "Solver command"),
+        }
+        for widget_id, content in fixed_text.items():
+            self.query_one(f"#{widget_id}", Static).update(content)
+        settings = self.service.settings()
+        advanced = (
+            self._text("高级 FSRS 参数：默认值", "Advanced FSRS parameters: defaults")
+            if settings.fsrs_parameters is None
+            else self._text(
+                "高级 FSRS 参数：已自定义", "Advanced FSRS parameters: custom"
+            )
+        )
+        self.query_one("#settings-advanced", Static).update(advanced)
+
     def refresh_views(self) -> None:
         try:
             plan = self.service.daily_plan()
         except ApplicationError as error:
-            self.query_one("#health", Label).update(f"调度错误: {error}")
+            self.query_one("#health", Label).update(
+                self._text("调度错误", "Scheduling error") + f": {error}"
+            )
             return
 
         self.plan_items = list(plan.items)
         today = self.query_one("#today-table", DataTable)
         today.clear()
+        settings = self.service.settings()
+        display_timezone = ZoneInfo(settings.timezone)
         for item in self.plan_items:
             today.add_row(
                 "NEW" if item.is_new else "DUE",
                 item.frontend_id,
                 item.title,
                 item.difficulty,
-                item.due_at.astimezone().strftime("%m-%d %H:%M"),
+                item.due_at.astimezone(display_timezone).strftime("%m-%d %H:%M"),
                 key=item.question_key,
             )
 
@@ -226,8 +332,8 @@ class LeetCodeFsrsApp(App[None]):
             question = item.question
             state = {
                 CardState.NOT_ENROLLED: "—",
-                CardState.ACTIVE: "学习中",
-                CardState.SUSPENDED: "暂停",
+                CardState.ACTIVE: self._text("学习中", "Active"),
+                CardState.SUSPENDED: self._text("暂停", "Suspended"),
             }[item.state]
             questions.add_row(
                 question.frontend_id,
@@ -240,22 +346,41 @@ class LeetCodeFsrsApp(App[None]):
         health = self.service.health()
         counts = health.counts
         self.query_one("#stats", Static).update(
-            f"题目缓存: {counts.questions}\n复习卡片: {counts.cards}\n复习记录: {counts.reviews}\n暂停: {counts.suspended}\n"
-            f"今日到期积压: {plan.due_backlog}\n新题积压: {plan.new_backlog}"
+            self._text(
+                f"题目缓存: {counts.questions}\n复习卡片: {counts.cards}\n复习记录: {counts.reviews}\n暂停: {counts.suspended}\n"
+                f"今日到期积压: {plan.due_backlog}\n新题积压: {plan.new_backlog}",
+                f"Cached questions: {counts.questions}\nStudy cards: {counts.cards}\nReviews: {counts.reviews}\nSuspended: {counts.suspended}\n"
+                f"Due backlog: {plan.due_backlog}\nNew-card backlog: {plan.new_backlog}",
+            )
         )
         problems = len(health.scan_problems) + len(health.semantic_problems)
+        access = {
+            LibraryAccess.UNCONFIGURED: self._text("未配置", "Unconfigured"),
+            LibraryAccess.READ_ONLY: self._text("只读", "Read-only"),
+            LibraryAccess.WRITABLE: self._text("可写", "Writable"),
+        }[health.access]
         self.query_one("#data-status", Static).update(
-            f"共享目录: {health.shared_path or ''}\n"
-            f"账号: {health.account or '未绑定'}\n"
-            f"模式: {'只读' if health.access is LibraryAccess.READ_ONLY else '可写'}\n"
-            f"扫描问题: {problems}\n\n同步提示：让 Syncthing/WebDAV 客户端同步整个共享目录；请勿同步本机 SQLite。"
+            self._text(
+                f"共享目录: {health.shared_path or ''}\n"
+                f"账号: {health.account or '未绑定'}\n模式: {access}\n扫描问题: {problems}\n\n"
+                "同步提示：让 Syncthing/WebDAV 客户端同步整个共享目录；请勿同步本机 SQLite。",
+                f"Shared directory: {health.shared_path or ''}\n"
+                f"Account: {health.account or 'not bound'}\nMode: {access}\nProblems: {problems}\n\n"
+                "Replication: sync the whole shared directory with Syncthing/WebDAV; never sync local SQLite.",
+            )
         )
-        settings = self.service.settings()
-        self.query_one("#settings", Static).update(
-            f"时区: {settings.timezone}\n每日上限: {settings.daily_limit}\n新题上限: {settings.new_limit}\n"
-            f"期望记忆率: {settings.desired_retention}\n语言: {settings.language}\n"
-            f"本机解题器: {' '.join(settings.solver_command)}\n\n更多设置请使用 leetcode-fsrs config。"
-        )
+        if self._settings_baseline is None:
+            self._load_settings_form()
+        study_disabled = health.access is not LibraryAccess.WRITABLE
+        for widget_id in (
+            "settings-timezone",
+            "settings-daily",
+            "settings-new",
+            "settings-retention",
+            "settings-language",
+            "settings-study-save",
+        ):
+            self.query_one(f"#{widget_id}").disabled = study_disabled
         self.query_one("#health", Label).update(
             f"Due {plan.due_backlog} · New {plan.new_backlog} · Selected {len(plan.items)}"
         )
@@ -267,7 +392,12 @@ class LeetCodeFsrsApp(App[None]):
             self.notify(str(error), severity="error")
             return
         self.refresh_views()
-        self.notify("已从共享事件日志重建。")
+        self.notify(
+            self._text(
+                "已从共享 Study Events 重建。",
+                "Rebuilt from shared Study Events.",
+            )
+        )
 
     def action_next_tab(self) -> None:
         self._switch_tab(1)
@@ -413,6 +543,14 @@ class LeetCodeFsrsApp(App[None]):
             self.action_resume()
         elif button_id == "import-accepted":
             self.action_import_accepted()
+        elif button_id == "settings-study-save":
+            self._save_study_preferences()
+        elif button_id == "settings-study-reset":
+            self._load_settings_form(study=True, device=False)
+        elif button_id == "settings-device-save":
+            self._save_device_settings()
+        elif button_id == "settings-device-reset":
+            self._load_settings_form(study=False, device=True)
 
     def _selected_key(self, table_id: str) -> str | None:
         table = self.query_one(table_id, DataTable)
@@ -423,23 +561,31 @@ class LeetCodeFsrsApp(App[None]):
     def _solve_current(self) -> None:
         key = self._selected_key("#today-table")
         if not key:
-            raise ValueError("今日没有可复习题目。")
+            raise ValueError(self._text("今日没有可复习题目。", "No cards in Today."))
         solver_input = self.service.solver_input(key)
         with self.suspend():
             exit_code = run_solver(solver_input.command, solver_input.question)
         self.solved_key = key
         self.notify(
-            f"解题器已退出（{exit_code}）。请选择 Again / Hard / Good / Easy，或跳过。"
+            self._text(
+                f"解题器已退出（{exit_code}）。请选择 Again / Hard / Good / Easy，或跳过。",
+                f"Solver exited ({exit_code}). Choose Again, Hard, Good, or Easy—or skip.",
+            )
         )
 
     def _grade(self, rating: Rating) -> None:
         key = self._selected_key("#today-table")
         if not key or self.solved_key != key:
-            raise ValueError("请先打开并退出当前题目的解题器，再评分。")
+            raise ValueError(
+                self._text(
+                    "请先打开并退出当前题目的解题器，再评分。",
+                    "Open and exit the solver for this card before grading.",
+                )
+            )
         self.service.rate(key, rating)
         self.solved_key = None
         self.refresh_views()
-        self.notify(f"已记录 {rating.value}。")
+        self.notify(self._text("已记录", "Recorded") + f" {rating.value}.")
 
     def _advance_today(self) -> None:
         table = self.query_one("#today-table", DataTable)
@@ -450,7 +596,10 @@ class LeetCodeFsrsApp(App[None]):
     def _run_question_action(self, operation: Callable[[str], object]) -> None:
         key = self._selected_key("#questions-table")
         if not key:
-            self.notify("请先选择一道题。", severity="error")
+            self.notify(
+                self._text("请先选择一道题。", "Select a question first."),
+                severity="error",
+            )
             return
         try:
             operation(key)
@@ -485,3 +634,75 @@ class LeetCodeFsrsApp(App[None]):
                 f"Cached {len(questions)} questions; enrolled {enrolled} Accepted cards.",
             ),
         )
+
+    def _load_settings_form(self, *, study: bool = True, device: bool = True) -> None:
+        settings = self.service.settings()
+        if study:
+            self._settings_baseline = self.service.study_preferences()
+            self.query_one("#settings-timezone", Input).value = settings.timezone
+            self.query_one("#settings-daily", Input).value = str(settings.daily_limit)
+            self.query_one("#settings-new", Input).value = str(settings.new_limit)
+            self.query_one("#settings-retention", Input).value = str(
+                settings.desired_retention
+            )
+            self.query_one("#settings-language", Select).value = settings.language
+            self.query_one("#settings-study-status", Static).update("")
+        if device:
+            self.query_one("#settings-solver", Input).value = " ".join(
+                settings.solver_command
+            )
+            self.query_one("#settings-device-status", Static).update("")
+
+    def _save_study_preferences(self) -> None:
+        if self._settings_baseline is None:
+            self._load_settings_form()
+            return
+        try:
+            language = self.query_one("#settings-language", Select).value
+            if not isinstance(language, str):
+                raise TypeError(self._text("请选择语言。", "Choose a language."))
+            candidate = {
+                "timezone": self.query_one("#settings-timezone", Input).value.strip(),
+                "daily_limit": int(
+                    self.query_one("#settings-daily", Input).value.strip()
+                ),
+                "new_limit": int(self.query_one("#settings-new", Input).value.strip()),
+                "desired_retention": float(
+                    self.query_one("#settings-retention", Input).value.strip()
+                ),
+                "language": language,
+            }
+            changes = {
+                key: value
+                for key, value in candidate.items()
+                if self._settings_baseline[key] != value
+            }
+            self.service.set_preferences(changes, expected=self._settings_baseline)
+        except (ApplicationError, TypeError, ValueError) as error:
+            self.query_one("#settings-study-status", Static).update(str(error))
+            self.notify(str(error), severity="error")
+            return
+        self._settings_baseline = None
+        self.english = self.service.settings().language == "en"
+        self._apply_language()
+        self.query_one("#today-table", DataTable).clear(columns=True)
+        self.query_one("#questions-table", DataTable).clear(columns=True)
+        self._setup_tables()
+        self._load_settings_form(study=True, device=False)
+        self.refresh_views()
+        message = self._text("学习偏好已保存。", "Study Preferences saved.")
+        self.query_one("#settings-study-status", Static).update(message)
+        self.notify(message)
+
+    def _save_device_settings(self) -> None:
+        command = self.query_one("#settings-solver", Input).value
+        try:
+            self.service.set_solver_command(command)
+        except ApplicationError as error:
+            self.query_one("#settings-device-status", Static).update(str(error))
+            self.notify(str(error), severity="error")
+            return
+        self._load_settings_form(study=False, device=True)
+        message = self._text("本机设置已保存。", "Device settings saved.")
+        self.query_one("#settings-device-status", Static).update(message)
+        self.notify(message)

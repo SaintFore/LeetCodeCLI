@@ -7,11 +7,12 @@ from dataclasses import dataclass
 from datetime import UTC, datetime
 from enum import StrEnum
 from pathlib import Path
-from typing import Any, cast
-from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
+from typing import Any, Never, cast
+from zoneinfo import ZoneInfo
 
 from .config import LocalConfig, config_home, data_home
 from .domain import (
+    DEFAULT_STUDY_PREFERENCES,
     DailyPlan,
     EventType,
     PlanItem,
@@ -20,6 +21,7 @@ from .domain import (
     ScanProblem,
     StudyEvent,
     StudyPreferences,
+    validate_preference,
 )
 from .event_store import EventStore, EventStoreError, EventStoreUnavailableError
 from .fsrs_engine import replay_due, scheduler_from_preferences
@@ -43,6 +45,10 @@ class QuestionNotFoundError(ApplicationError):
 
 
 class InvalidOperationError(ApplicationError):
+    pass
+
+
+class SettingsConflictError(InvalidOperationError):
     pass
 
 
@@ -135,9 +141,9 @@ class ApplicationService:
         self, path: Path, timezone: str, username: str | None = None
     ) -> None:
         try:
-            ZoneInfo(timezone)
-        except ZoneInfoNotFoundError as error:
-            raise InvalidOperationError(f"Unknown IANA timezone: {timezone}") from error
+            validate_preference("timezone", timezone)
+        except ValueError as error:
+            raise InvalidOperationError(str(error)) from error
         resolved = path.expanduser().resolve()
         try:
             store = EventStore.create(resolved, self._config.device_id)
@@ -164,8 +170,11 @@ class ApplicationService:
             result = store.scan()
         except (OSError, EventStoreError) as error:
             raise InvalidOperationError(str(error)) from error
+        valid_events, preference_errors = self._validated_events(result.events)
         self._scan_problems = result.problems
-        self._semantic_errors = tuple(self._projection.rebuild(result.events))
+        self._semantic_errors = tuple(
+            preference_errors + self._projection.rebuild(valid_events)
+        )
         self._read_only = not store.writable()
 
     def bind_account(self, username: str) -> StudyEvent:
@@ -228,78 +237,101 @@ class ApplicationService:
         )
 
     def set_preference(self, key: str, value: Any) -> StudyEvent:
-        allowed = {
-            "timezone",
-            "daily_limit",
-            "new_limit",
-            "desired_retention",
-            "language",
-            "fsrs_parameters",
-        }
-        if key not in allowed:
-            raise InvalidOperationError(f"Unknown preference: {key}")
-        if key == "timezone":
-            try:
-                ZoneInfo(str(value))
-            except ZoneInfoNotFoundError as error:
-                raise InvalidOperationError(
-                    f"Unknown IANA timezone: {value}"
-                ) from error
-        elif key in {"daily_limit", "new_limit"}:
-            if isinstance(value, bool) or not isinstance(value, int) or value < 0:
-                raise InvalidOperationError(f"{key} must be a non-negative integer")
-        elif key == "desired_retention":
-            if (
-                isinstance(value, bool)
-                or not isinstance(value, (int, float))
-                or not 0 < value <= 1
-            ):
-                raise InvalidOperationError(
-                    "desired_retention must be greater than 0 and at most 1"
+        return self.set_preferences({key: value}, _write_unchanged=True)[0]
+
+    def set_preferences(
+        self,
+        changes: dict[str, Any],
+        *,
+        expected: StudyPreferences | None = None,
+        _write_unchanged: bool = False,
+    ) -> tuple[StudyEvent, ...]:
+        """Save portable preferences after validation and one projection refresh."""
+        if not changes:
+            return ()
+        try:
+            for key, value in changes.items():
+                validate_preference(key, value)
+        except ValueError as error:
+            raise InvalidOperationError(str(error)) from error
+
+        if expected is not None:
+            self.refresh()
+            if self._preferences() != expected:
+                raise SettingsConflictError(
+                    "Study Preferences changed on another device; reload before saving"
                 )
-        elif key == "language" and value not in {"zh", "en"}:
-            raise InvalidOperationError("language must be zh or en")
-        elif (
-            key == "fsrs_parameters"
-            and value is not None
-            and (
-                not isinstance(value, list)
-                or not value
-                or any(
-                    isinstance(item, bool) or not isinstance(item, (int, float))
-                    for item in value
-                )
-            )
-        ):
-            raise InvalidOperationError(
-                "fsrs_parameters must be null or a non-empty JSON number array"
-            )
-        if key in {"desired_retention", "fsrs_parameters"}:
-            candidate = self._preferences()
-            if key == "desired_retention":
-                candidate["desired_retention"] = cast(float, value)
-            else:
-                candidate["fsrs_parameters"] = cast(list[float] | None, value)
-            try:
-                scheduler_from_preferences(candidate)
-            except ValueError as error:
-                raise InvalidOperationError(str(error)) from error
-        return self._append(EventType.PREFERENCE_SET, {"key": key, "value": value})
+
+        current = self._preferences()
+        candidate = StudyPreferences(**current)
+        candidate.update(cast(StudyPreferences, changes))
+        try:
+            scheduler_from_preferences(candidate)
+        except ValueError as error:
+            raise InvalidOperationError(str(error)) from error
+
+        store = self._writable_store()
+        events: list[StudyEvent] = []
+        try:
+            for key, value in changes.items():
+                if _write_unchanged or candidate[key] != current[key]:
+                    events.append(
+                        store.append(
+                            EventType.PREFERENCE_SET, {"key": key, "value": value}
+                        )
+                    )
+        except OSError as error:
+            self._raise_write_error(error, store)
+        except EventStoreUnavailableError as error:
+            raise ReadOnlyLibraryError(str(error)) from error
+        except EventStoreError as error:
+            raise InvalidOperationError(str(error)) from error
+        self.refresh()
+        return tuple(events)
 
     def _preferences(self) -> StudyPreferences:
         return StudyPreferences(
-            timezone=cast(str, self._projection.preference("timezone", "UTC")),
-            daily_limit=cast(int, self._projection.preference("daily_limit", 20)),
-            new_limit=cast(int, self._projection.preference("new_limit", 5)),
-            desired_retention=cast(
-                float, self._projection.preference("desired_retention", 0.9)
+            timezone=cast(
+                str,
+                self._projection.preference(
+                    "timezone", DEFAULT_STUDY_PREFERENCES["timezone"]
+                ),
             ),
-            language=cast(str, self._projection.preference("language", "zh")),
+            daily_limit=cast(
+                int,
+                self._projection.preference(
+                    "daily_limit", DEFAULT_STUDY_PREFERENCES["daily_limit"]
+                ),
+            ),
+            new_limit=cast(
+                int,
+                self._projection.preference(
+                    "new_limit", DEFAULT_STUDY_PREFERENCES["new_limit"]
+                ),
+            ),
+            desired_retention=cast(
+                float,
+                self._projection.preference(
+                    "desired_retention",
+                    DEFAULT_STUDY_PREFERENCES["desired_retention"],
+                ),
+            ),
+            language=cast(
+                str,
+                self._projection.preference(
+                    "language", DEFAULT_STUDY_PREFERENCES["language"]
+                ),
+            ),
             fsrs_parameters=cast(
                 list[float] | None,
-                self._projection.preference("fsrs_parameters", None),
+                self._projection.preference(
+                    "fsrs_parameters", DEFAULT_STUDY_PREFERENCES["fsrs_parameters"]
+                ),
             ),
         )
+
+    def study_preferences(self) -> StudyPreferences:
+        return self._preferences()
 
     def questions(self, search: str = "") -> tuple[QuestionListItem, ...]:
         cards = {
@@ -442,24 +474,56 @@ class ApplicationService:
         *,
         occurred_at: datetime | None = None,
     ) -> StudyEvent:
-        store = self._require_store()
-        if self._read_only or not store.writable():
-            raise ReadOnlyLibraryError(f"Study library is read-only: {store.root}")
+        store = self._writable_store()
         try:
             event = store.append(event_type, payload, occurred_at=occurred_at)
         except OSError as error:
-            if isinstance(error, PermissionError) or error.errno in {
-                errno.EACCES,
-                errno.EPERM,
-                errno.EROFS,
-            }:
-                raise ReadOnlyLibraryError(
-                    f"Study library is read-only: {store.root}"
-                ) from error
-            raise InvalidOperationError(str(error)) from error
+            self._raise_write_error(error, store)
         except EventStoreUnavailableError as error:
             raise ReadOnlyLibraryError(str(error)) from error
         except EventStoreError as error:
             raise InvalidOperationError(str(error)) from error
         self.refresh()
         return event
+
+    def _writable_store(self) -> EventStore:
+        store = self._require_store()
+        if self._read_only or not store.writable():
+            raise ReadOnlyLibraryError(f"Study library is read-only: {store.root}")
+        return store
+
+    @staticmethod
+    def _raise_write_error(error: OSError, store: EventStore) -> Never:
+        if isinstance(error, PermissionError) or error.errno in {
+            errno.EACCES,
+            errno.EPERM,
+            errno.EROFS,
+        }:
+            raise ReadOnlyLibraryError(
+                f"Study library is read-only: {store.root}"
+            ) from error
+        raise InvalidOperationError(str(error)) from error
+
+    @staticmethod
+    def _validated_events(
+        events: tuple[StudyEvent, ...],
+    ) -> tuple[tuple[StudyEvent, ...], list[str]]:
+        preferences = StudyPreferences(**DEFAULT_STUDY_PREFERENCES)
+        valid: list[StudyEvent] = []
+        errors: list[str] = []
+        for event in events:
+            if event.type is not EventType.PREFERENCE_SET:
+                valid.append(event)
+                continue
+            key = str(event.payload["key"])
+            value = event.payload["value"]
+            candidate = StudyPreferences(**preferences)
+            candidate[key] = value  # type: ignore[literal-required]
+            try:
+                scheduler_from_preferences(candidate)
+            except (TypeError, ValueError) as error:
+                errors.append(f"invalid preference event {event.event_id}: {error}")
+                continue
+            preferences = candidate
+            valid.append(event)
+        return tuple(valid), errors

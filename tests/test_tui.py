@@ -2,7 +2,7 @@ from contextlib import nullcontext
 from pathlib import Path
 
 import pytest
-from textual.widgets import Button, DataTable, Input, Static, TabbedContent
+from textual.widgets import Button, DataTable, Input, Select, Static, TabbedContent
 
 from leetcode_fsrs.config import LocalConfig
 from leetcode_fsrs.domain import Question
@@ -230,3 +230,51 @@ async def test_first_run_setup_submits_with_enter_and_focuses_today(
 
         assert service.health().shared_path == str((tmp_path / "shared").resolve())
         assert app.query_one("#today-table", DataTable).has_focus
+
+
+async def test_settings_save_portable_and_device_values_independently(service) -> None:
+    app = LeetCodeFsrsApp(service)
+
+    async with app.run_test() as pilot:
+        await pilot.click("#--content-tab-settings-tab")
+        app.query_one("#settings-timezone", Input).value = "UTC"
+        app.query_one("#settings-daily", Input).value = "12"
+        app.query_one("#settings-new", Input).value = "0"
+        app.query_one("#settings-retention", Input).value = "0.91"
+        app.query_one("#settings-language", Select).value = "en"
+        app._save_study_preferences()
+        await pilot.pause()
+
+        settings = service.settings()
+        assert settings.timezone == "UTC"
+        assert settings.daily_limit == 12
+        assert settings.new_limit == 0
+        assert settings.desired_retention == 0.91
+        assert settings.language == "en"
+        assert str(app.query_one("#stats", Static).content).startswith(
+            "Cached questions:"
+        )
+        assert str(app.query_one("#settings-study-save", Button).label) == (
+            "Save preferences"
+        )
+
+        app.query_one("#settings-solver", Input).value = "code {slug}"
+        app._save_device_settings()
+
+        assert service.settings().solver_command == ("code", "{slug}")
+
+
+async def test_read_only_settings_still_allow_device_changes(
+    service, monkeypatch
+) -> None:
+    monkeypatch.setattr(
+        "leetcode_fsrs.event_store.EventStore.writable", lambda self: False
+    )
+    service.refresh()
+    app = LeetCodeFsrsApp(service)
+
+    async with app.run_test() as pilot:
+        await pilot.pause()
+
+        assert app.query_one("#settings-study-save", Button).disabled
+        assert not app.query_one("#settings-device-save", Button).disabled

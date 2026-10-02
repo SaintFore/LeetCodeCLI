@@ -1,3 +1,4 @@
+import json
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
 
@@ -16,6 +17,7 @@ from leetcode_fsrs.services import (
     QuestionListItem,
     QuestionNotFoundError,
     ReadOnlyLibraryError,
+    SettingsConflictError,
     SolverInput,
 )
 
@@ -133,6 +135,79 @@ def test_health_settings_and_solver_input_hide_application_internals(service) ->
     assert service.solver_input("1") == SolverInput(
         question, ("nvim", "+Leet", "{slug}")
     )
+
+
+def test_preferences_are_saved_as_one_validated_batch(service, monkeypatch) -> None:
+    refreshes = 0
+    original_refresh = service.refresh
+
+    def counted_refresh() -> None:
+        nonlocal refreshes
+        refreshes += 1
+        original_refresh()
+
+    monkeypatch.setattr(service, "refresh", counted_refresh)
+    expected = service.study_preferences()
+
+    events = service.set_preferences(
+        {"daily_limit": 12, "new_limit": 0, "language": "en"},
+        expected=expected,
+    )
+
+    assert len(events) == 3
+    assert refreshes == 2  # conflict check, then one rebuild after all appends
+    assert service.settings().daily_limit == 12
+    assert service.settings().new_limit == 0
+    assert service.settings().language == "en"
+
+
+def test_single_preference_write_preserves_event_return_for_same_value(service) -> None:
+    event = service.set_preference("daily_limit", 20)
+
+    assert event.type is EventType.PREFERENCE_SET
+    assert event.payload == {"key": "daily_limit", "value": 20}
+
+
+def test_preferences_detect_a_stale_multi_device_form(service, tmp_path: Path) -> None:
+    expected = service.study_preferences()
+    replica = EventStore(
+        tmp_path / "shared",
+        "22222222-2222-4222-8222-222222222222",
+    )
+    replica.append(EventType.PREFERENCE_SET, {"key": "daily_limit", "value": 7})
+
+    with pytest.raises(SettingsConflictError, match="another device"):
+        service.set_preferences({"new_limit": 2}, expected=expected)
+
+    assert service.settings().daily_limit == 7
+    assert service.settings().new_limit == 5
+
+
+def test_invalid_fsrs_preferences_are_reported_and_previous_value_survives(
+    service, tmp_path: Path
+) -> None:
+    service.set_preference("desired_retention", 0.91)
+    event_file = next((tmp_path / "shared" / "events").glob("*/*.ndjson"))
+    template = json.loads(event_file.read_text(encoding="utf-8").splitlines()[0])
+    template.update(
+        event_id="22222222-2222-4222-8222-222222222222",
+        device_id="22222222-2222-4222-8222-222222222222",
+        sequence=1,
+        occurred_at="2099-01-01T00:00:00+00:00",
+        payload={"key": "fsrs_parameters", "value": [1.0]},
+    )
+    replica_file = (
+        tmp_path
+        / "shared/events/22222222-2222-4222-8222-222222222222/2099-01-01.ndjson"
+    )
+    replica_file.parent.mkdir(parents=True)
+    replica_file.write_text(json.dumps(template) + "\n", encoding="utf-8")
+
+    service.refresh()
+
+    assert service.settings().desired_retention == 0.91
+    assert service.settings().fsrs_parameters is None
+    assert "Expected 21 parameters" in service.health().semantic_problems[0]
 
 
 def test_commands_resolve_references_and_report_invalid_transitions(service) -> None:

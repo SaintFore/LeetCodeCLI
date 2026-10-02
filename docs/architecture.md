@@ -48,3 +48,7 @@ Event write refreshes before returning so subsequent application reads see the c
 ## Local versus portable state
 
 Portable events include account binding, enrollment, reviews, suspension, corrections, and scheduling preferences. The device ID, shared-directory location, solver command, credentials, question cache, and SQLite projection remain local.
+
+The Settings UI names the former **Study Preferences** and the latter **Device Settings**. Each section saves independently because immutable Study Events and the local configuration file cannot form one atomic transaction. Before saving Study Preferences, the application refreshes the Study Library and rejects a stale form rather than overwriting a replicated change.
+
+Preference validation is shared by CLI, TUI, local event appends, and replicated event scans. Invalid replicated preference events are reported and excluded from the Projection, preserving the latest preceding valid value.

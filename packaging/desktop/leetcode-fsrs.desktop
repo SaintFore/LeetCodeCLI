@@ -1,0 +1,9 @@
+[Desktop Entry]
+Type=Application
+Name=LeetCode FSRS
+Comment=LeetCode review planner powered by FSRS
+Exec=leetcode-fsrs
+Icon=leetcode-fsrs
+Terminal=true
+Categories=Education;
+Keywords=LeetCode;FSRS;Spaced Repetition;

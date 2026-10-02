@@ -43,8 +43,10 @@ LeetCode FSRS 是一个以 [Textual](https://textual.textualize.io/) TUI 为主�
 #### Arch Linux
 
 ```bash
-paru -S leetcode-fsrs-git
+paru -S leetcode-fsrs-bin
 ```
+
+`leetcode-fsrs-bin` 安装正式版本的预编译 x86_64 binary；需要跟踪 `main` 时可改用 `leetcode-fsrs-git`。两个包都会安装 Desktop Entry 和图标，因此 LeetCode FSRS 会出现在 Application Launcher 中，并通过默认终端启动 TUI。
 
 #### 从源码安装
 
@@ -113,6 +115,12 @@ leetcode-fsrs config solver 'my-solver {slug} {url}'
 
 输入框获得焦点时，字母键用于输入文字。方向键、Tab、按钮 Enter 操作和鼠标仍然可用；Footer 会显示当前页面可用的快捷键。
 
+### 设置
+
+TUI 的 **Settings** 页面可以修改跨设备复制的 Study Preferences：时区、每日上限、新题上限、期望记忆率和界面语言。Solver 命令属于 Device Setting，只保存在当前设备；两组设置分别保存，避免把本机命令误认为会同步。只读模式下仍可修改 Device Setting。
+
+高级 `fsrs_parameters` 和脚本化配置仍通过 `leetcode-fsrs config` 管理。切换 Study Library 不属于普通设置，请重新运行 `leetcode-fsrs init PATH` 明确附加目标。
+
 ### CLI 速查
 
 | 命令 | 用途 |
@@ -160,7 +168,7 @@ pip install -e '.[test]'
 
 统一入口依次运行 Ruff lint、Ruff 格式检查、Pyright、pytest 和隔离的 CLI smoke test，并在最后汇总所有失败项。
 
-Arch Linux 打包配置位于 `packaging/aur-git/`；也可使用 `scripts/build_arch_package.sh` 调用 `paru` 进行本地构建。
+Arch Linux 源码滚动包位于 `packaging/aur-git/`；预编译包模板位于 `packaging/aur-bin/`，由 tag 发布流水线填入版本和 SHA-256。可使用 `scripts/build_arch_package.sh` 构建 `-git` 包，或用 `scripts/build_arch_binary_package.sh VERSION ARCHIVE` 从本地发布归档构建 `-bin` 包。
 
 ---
 
@@ -186,8 +194,10 @@ Python 3.11 or newer is required.
 #### Arch Linux
 
 ```bash
-paru -S leetcode-fsrs-git
+paru -S leetcode-fsrs-bin
 ```
+
+`leetcode-fsrs-bin` installs the versioned prebuilt x86_64 binary; use `leetcode-fsrs-git` to track `main`. Both packages install the Desktop Entry and icon, so LeetCode FSRS appears in the Application Launcher and opens its TUI in the default terminal.
 
 #### Install from source
 
@@ -256,6 +266,12 @@ The solver process also receives `LEETCODE_FSRS_KEY`, `LEETCODE_FSRS_SLUG`, and 
 
 Letter keys enter text while an input has focus. Arrow keys, Tab, Enter on buttons, and the mouse remain available; the Footer shows the shortcuts for the current page.
 
+### Settings
+
+The TUI **Settings** page edits replicated Study Preferences: timezone, daily limit, new-card limit, desired retention, and interface language. The Solver command is a Device Setting that remains on the current machine. The two sections save independently, and Device Settings remain editable when the Study Library is read-only.
+
+Advanced `fsrs_parameters` and scripted configuration remain available through `leetcode-fsrs config`. Switching the Study Library is intentionally not an ordinary setting; run `leetcode-fsrs init PATH` to attach explicitly.
+
 ### CLI reference
 
 | Command | Purpose |
@@ -303,4 +319,6 @@ pip install -e '.[test]'
 
 The unified entry point runs Ruff lint, Ruff formatting checks, Pyright, pytest, and an isolated CLI smoke test in order, then summarizes every failed stage.
 
-The Arch Linux package lives in `packaging/aur-git/`. You can also build it locally through `scripts/build_arch_package.sh`, which invokes `paru`.
+The rolling Arch package lives in `packaging/aur-git/`. The prebuilt package template lives in `packaging/aur-bin/` and receives its version and SHA-256 from the tag release workflow. Use `scripts/build_arch_package.sh` for a local `-git` build, or `scripts/build_arch_binary_package.sh VERSION ARCHIVE` to build `-bin` from a local release archive.
+
+Official Linux binaries target x86_64 systems with glibc 2.35 or newer and are not compatible with musl/Alpine. Tagged releases publish a checksummed archive containing the executable and desktop resources; the `leetcode-fsrs-bin` AUR package consumes that same archive.

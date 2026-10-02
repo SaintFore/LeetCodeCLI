@@ -23,6 +23,7 @@ Do not copy a local device configuration to another machine: it contains the wri
 - Missing or non-writable shared directory: reads continue from the last local projection where possible; new study writes are rejected.
 - Incomplete final NDJSON line: ignored until a later scan sees its newline.
 - Invalid complete line: reported with file and line, then skipped.
+- Invalid Study Preference: reported and skipped; the previous valid value remains active.
 - Duplicate event ID with identical contents: deduplicated.
 - Duplicate event ID with different contents: reported as corruption.
 

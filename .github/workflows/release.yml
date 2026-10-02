@@ -1,4 +1,4 @@
-name: Build and release Linux binary
+name: Release Linux binary and AUR package
 
 on:
   push:
@@ -6,7 +6,7 @@ on:
 
 jobs:
   release:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     permissions:
       contents: write
     steps:
@@ -14,11 +14,101 @@ jobs:
       - uses: actions/setup-python@v7
         with:
           python-version: "3.11"
-      - run: python -m pip install -e '.[test]' pyinstaller
-      - run: pytest -q
-      - run: bash scripts/build_binary.sh
-      - run: mv dist/leetcode-fsrs leetcode-fsrs-linux-x86_64
+
+      - name: Validate release version
+        run: |
+          version="${GITHUB_REF_NAME#v}"
+          project_version=$(sed -n 's/^version = "\([0-9.]*\)"/\1/p' pyproject.toml)
+          package_version=$(sed -n 's/^__version__ = "\([0-9.]*\)"/\1/p' leetcode_fsrs/__init__.py)
+          test "$version" = "$project_version"
+          test "$version" = "$package_version"
+
+      - run: python -m venv .venv
+      - run: .venv/bin/python -m pip install -e '.[test]' pyinstaller
+      - run: scripts/check.sh
+      - run: .venv/bin/python -m PyInstaller --clean --onefile --name leetcode-fsrs --collect-all textual --collect-all fsrs --collect-all keyring scripts/pyinstaller_entry.py
+      - run: scripts/smoke_binary.sh
+      - run: scripts/build_release_archive.sh "${GITHUB_REF_NAME#v}"
+
+      - uses: actions/upload-artifact@v7
+        with:
+          name: leetcode-fsrs-release
+          path: |
+            dist/leetcode-fsrs-*-linux-x86_64.tar.gz
+            dist/SHA256SUMS
+          if-no-files-found: error
+
       - uses: softprops/action-gh-release@v2
         with:
-          files: leetcode-fsrs-linux-x86_64
+          files: |
+            dist/leetcode-fsrs-*-linux-x86_64.tar.gz
+            dist/SHA256SUMS
           generate_release_notes: true
+
+  build-aur-bin:
+    needs: release
+    runs-on: ubuntu-latest
+    container: archlinux:base-devel
+    steps:
+      - run: pacman -Syu --noconfirm git python sudo
+      - uses: actions/checkout@v7
+      - uses: actions/download-artifact@v8
+        with:
+          name: leetcode-fsrs-release
+          path: dist
+
+      - name: Render AUR metadata
+        run: |
+          version="${GITHUB_REF_NAME#v}"
+          checksum=$(cut -d ' ' -f1 dist/SHA256SUMS)
+          python scripts/render_aur_bin.py "$version" "$checksum" --output packaging/aur-bin/PKGBUILD
+          useradd --create-home builder
+          chown -R builder:builder "$GITHUB_WORKSPACE"
+          sudo -u builder bash -lc "cd '$GITHUB_WORKSPACE/packaging/aur-bin' && makepkg --printsrcinfo > .SRCINFO"
+
+      - name: Build and inspect binary package
+        run: |
+          sudo -u builder bash -lc "cd '$GITHUB_WORKSPACE/packaging/aur-bin' && makepkg --syncdeps --cleanbuild --noconfirm --needed"
+          package=$(find packaging/aur-bin -maxdepth 1 -name '*.pkg.tar.zst' -print -quit)
+          test -n "$package"
+          pacman -Qlp "$package" | grep -E '/usr/bin/leetcode-fsrs$'
+          pacman -Qlp "$package" | grep -E '/usr/share/applications/leetcode-fsrs.desktop$'
+          pacman -Qlp "$package" | grep -E '/usr/share/icons/hicolor/1024x1024/apps/leetcode-fsrs.png$'
+
+      - uses: actions/upload-artifact@v7
+        with:
+          name: leetcode-fsrs-aur-bin-metadata
+          path: |
+            packaging/aur-bin/PKGBUILD
+            packaging/aur-bin/.SRCINFO
+          if-no-files-found: error
+
+  publish-aur-bin:
+    needs: build-aur-bin
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v8
+        with:
+          name: leetcode-fsrs-aur-bin-metadata
+          path: metadata
+
+      - uses: webfactory/ssh-agent@v0.10.0
+        with:
+          ssh-private-key: ${{ secrets.AUR_SSH_PRIVATE_KEY }}
+
+      - name: Publish leetcode-fsrs-bin
+        run: |
+          mkdir -p ~/.ssh
+          ssh-keyscan aur.archlinux.org >> ~/.ssh/known_hosts
+          git clone ssh://aur@aur.archlinux.org/leetcode-fsrs-bin.git aur-package
+          cp metadata/PKGBUILD metadata/.SRCINFO aur-package/
+          cd aur-package
+          git config user.name "SaintFore release bot"
+          git config user.email "forevergoodforest@outlook.com"
+          git add PKGBUILD .SRCINFO
+          if git diff --cached --quiet; then
+            echo "AUR metadata is already current."
+            exit 0
+          fi
+          git commit -m "Release ${GITHUB_REF_NAME}"
+          git push origin master

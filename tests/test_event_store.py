@@ -35,6 +35,23 @@ def test_scan_skips_corruption_and_incomplete_final_write(tmp_path: Path) -> Non
     assert result.problems[0].line == 2
 
 
+def test_scan_rejects_invalid_replicated_preference(tmp_path: Path) -> None:
+    store = EventStore.create(tmp_path, "11111111-1111-4111-8111-111111111111")
+    store.append(EventType.PREFERENCE_SET, {"key": "daily_limit", "value": 10})
+    event_file = next((tmp_path / "events").glob("*/*.ndjson"))
+    valid = json.loads(event_file.read_text(encoding="utf-8").splitlines()[0])
+    valid.update(event_id="22222222-2222-4222-8222-222222222222", sequence=2)
+    valid["payload"] = {"key": "daily_limit", "value": "not-an-integer"}
+    with event_file.open("a", encoding="utf-8") as stream:
+        stream.write(json.dumps(valid) + "\n")
+
+    result = store.scan()
+
+    assert len(result.events) == 1
+    assert len(result.problems) == 1
+    assert "non-negative integer" in result.problems[0].message
+
+
 def test_missing_shared_directory_keeps_local_projection_readable(
     tmp_path: Path,
 ) -> None:

@@ -11,7 +11,7 @@ from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
-from .domain import EventType, ScanProblem, StudyEvent
+from .domain import EventType, ScanProblem, StudyEvent, validate_preference
 
 SCHEMA_VERSION = 1
 
@@ -245,6 +245,8 @@ def _validate_event(event: StudyEvent) -> None:
         from .domain import Rating
 
         Rating(str(payload["rating"]))
+    if event.type == EventType.PREFERENCE_SET:
+        validate_preference(str(payload["key"]), payload["value"])
 
 
 def write_events(
