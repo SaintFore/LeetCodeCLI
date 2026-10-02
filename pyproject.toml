@@ -21,6 +21,7 @@ dependencies = [
 [project.optional-dependencies]
 optimizer = ["fsrs[optimizer]>=6.3,<7; python_version >= '3.12' and python_version < '3.14'"]
 test = [
+  "pyright>=1.1,<2",
   "pytest>=8.4,<9",
   "pytest-asyncio>=1.2,<2",
 ]
@@ -35,3 +36,9 @@ include = ["leetcode_fsrs*"]
 asyncio_mode = "auto"
 pythonpath = ["."]
 testpaths = ["tests"]
+
+[tool.pyright]
+include = ["leetcode_fsrs", "tests"]
+pythonVersion = "3.11"
+venv = ".venv"
+venvPath = "."

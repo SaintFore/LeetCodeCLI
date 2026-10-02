@@ -61,13 +61,18 @@ class LeetCodeClient:
             slug = str(stat.get("question__title_slug") or "")
             if not slug:
                 continue
+            level = (pair.get("difficulty") or {}).get("level")
             questions.append(
                 Question(
                     key=f"leetcode.com:{slug}",
                     frontend_id=str(stat.get("frontend_question_id") or stat.get("question_id") or "?"),
                     slug=slug,
                     title=str(stat.get("question__title") or slug),
-                    difficulty=difficulties.get((pair.get("difficulty") or {}).get("level"), "Unknown"),
+                    difficulty=(
+                        difficulties.get(level, "Unknown")
+                        if isinstance(level, int)
+                        else "Unknown"
+                    ),
                     url=f"{BASE_URL}/problems/{slug}/",
                     accepted=pair.get("status") == "ac",
                 )

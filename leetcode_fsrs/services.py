@@ -7,11 +7,20 @@ from dataclasses import dataclass
 from datetime import UTC, datetime
 from enum import StrEnum
 from pathlib import Path
-from typing import Any
+from typing import Any, cast
 from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
 from .config import LocalConfig, config_home, data_home
-from .domain import DailyPlan, EventType, PlanItem, Question, Rating, ScanProblem, StudyEvent
+from .domain import (
+    DailyPlan,
+    EventType,
+    PlanItem,
+    Question,
+    Rating,
+    ScanProblem,
+    StudyEvent,
+    StudyPreferences,
+)
 from .event_store import EventStore, EventStoreError, EventStoreUnavailableError
 from .fsrs_engine import replay_due, scheduler_from_preferences
 from .projection import CardRecord, Projection
@@ -243,22 +252,30 @@ class ApplicationService:
                 raise InvalidOperationError("fsrs_parameters must be null or a non-empty JSON number array")
         if key in {"desired_retention", "fsrs_parameters"}:
             candidate = self._preferences()
-            candidate[key] = value
+            if key == "desired_retention":
+                candidate["desired_retention"] = cast(float, value)
+            else:
+                candidate["fsrs_parameters"] = cast(list[float] | None, value)
             try:
                 scheduler_from_preferences(candidate)
             except ValueError as error:
                 raise InvalidOperationError(str(error)) from error
         return self._append(EventType.PREFERENCE_SET, {"key": key, "value": value})
 
-    def _preferences(self) -> dict[str, object]:
-        return {
-            "timezone": self._projection.preference("timezone", "UTC"),
-            "daily_limit": self._projection.preference("daily_limit", 20),
-            "new_limit": self._projection.preference("new_limit", 5),
-            "desired_retention": self._projection.preference("desired_retention", 0.9),
-            "language": self._projection.preference("language", "zh"),
-            "fsrs_parameters": self._projection.preference("fsrs_parameters", None),
-        }
+    def _preferences(self) -> StudyPreferences:
+        return StudyPreferences(
+            timezone=cast(str, self._projection.preference("timezone", "UTC")),
+            daily_limit=cast(int, self._projection.preference("daily_limit", 20)),
+            new_limit=cast(int, self._projection.preference("new_limit", 5)),
+            desired_retention=cast(
+                float, self._projection.preference("desired_retention", 0.9)
+            ),
+            language=cast(str, self._projection.preference("language", "zh")),
+            fsrs_parameters=cast(
+                list[float] | None,
+                self._projection.preference("fsrs_parameters", None),
+            ),
+        )
 
     def questions(self, search: str = "") -> tuple[QuestionListItem, ...]:
         cards = {

@@ -5,7 +5,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from datetime import datetime
 from enum import StrEnum
-from typing import Any
+from typing import Any, TypedDict
 
 
 class Rating(StrEnum):
@@ -27,6 +27,15 @@ class EventType(StrEnum):
     REVIEW_RECORDED = "review_recorded"
     REVIEW_CORRECTED = "review_corrected"
     PREFERENCE_SET = "preference_set"
+
+
+class StudyPreferences(TypedDict):
+    timezone: str
+    daily_limit: int
+    new_limit: int
+    desired_retention: float
+    language: str
+    fsrs_parameters: list[float] | None
 
 
 @dataclass(frozen=True, slots=True)

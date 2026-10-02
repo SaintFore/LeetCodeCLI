@@ -139,6 +139,7 @@ python -m venv .venv
 source .venv/bin/activate
 pip install -e '.[test]'
 pytest -q
+pyright
 ```
 
 Arch Linux 打包配置位于 `packaging/aur-git/`；也可使用 `scripts/build_arch_package.sh` 调用 `paru` 进行本地构建。
@@ -263,6 +264,7 @@ python -m venv .venv
 source .venv/bin/activate
 pip install -e '.[test]'
 pytest -q
+pyright
 ```
 
 The Arch Linux package lives in `packaging/aur-git/`. You can also build it locally through `scripts/build_arch_package.sh`, which invokes `paru`.

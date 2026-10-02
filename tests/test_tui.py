@@ -2,7 +2,7 @@ import pytest
 
 from leetcode_fsrs.domain import Question
 from leetcode_fsrs.services import CardState, InvalidOperationError
-from textual.widgets import Static, TabbedContent
+from textual.widgets import DataTable, Static, TabbedContent
 from leetcode_fsrs.tui import LeetCodeFsrsApp
 
 
@@ -15,8 +15,8 @@ async def test_tui_mounts_all_primary_views(service) -> None:
 
     async with app.run_test() as pilot:
         await pilot.pause()
-        assert app.query_one("#today-table").row_count == 1
-        assert app.query_one("#questions-table").row_count == 1
+        assert app.query_one("#today-table", DataTable).row_count == 1
+        assert app.query_one("#questions-table", DataTable).row_count == 1
         assert app._selected_key("#today-table") == "leetcode.com:two-sum"
         assert app.query_one("#stats")
         assert app.query_one("#data-status")

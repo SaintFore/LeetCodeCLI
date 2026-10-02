@@ -8,6 +8,17 @@ on:
     branches: [main]
 
 jobs:
+  typecheck:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.11"
+      - run: python -m venv .venv
+      - run: .venv/bin/python -m pip install -e '.[test]'
+      - run: .venv/bin/pyright
+
   test:
     runs-on: ubuntu-latest
     strategy:

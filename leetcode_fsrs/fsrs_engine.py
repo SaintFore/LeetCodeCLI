@@ -3,29 +3,30 @@
 from __future__ import annotations
 
 from datetime import UTC, datetime
-from typing import Iterable, Mapping
+from typing import Iterable
 
 from fsrs import Card, Rating as FsrsRating, Scheduler
 
-from .domain import Review
+from .domain import Review, StudyPreferences
 
 
-def scheduler_from_preferences(preferences: Mapping[str, object]) -> Scheduler:
-    arguments: dict[str, object] = {
-        "desired_retention": float(preferences.get("desired_retention", 0.9)),
-        # Rebuilding the same event log must always produce the same due dates.
-        "enable_fuzzing": False,
-    }
-    parameters = preferences.get("fsrs_parameters")
-    if isinstance(parameters, list) and parameters:
-        arguments["parameters"] = tuple(float(value) for value in parameters)
-    return Scheduler(**arguments)
+def scheduler_from_preferences(preferences: StudyPreferences) -> Scheduler:
+    desired_retention = float(preferences["desired_retention"])
+    parameters = preferences["fsrs_parameters"]
+    if parameters:
+        return Scheduler(
+            parameters=tuple(float(value) for value in parameters),
+            desired_retention=desired_retention,
+            # Rebuilding the same event log must always produce the same due dates.
+            enable_fuzzing=False,
+        )
+    return Scheduler(desired_retention=desired_retention, enable_fuzzing=False)
 
 
 def replay_due(
     enrolled_at: datetime,
     reviews: Iterable[Review],
-    preferences: Mapping[str, object],
+    preferences: StudyPreferences,
 ) -> datetime:
     """Replay immutable review rows and return the current UTC due time."""
     ordered = sorted(reviews, key=lambda review: (review.occurred_at, review.event_id))
