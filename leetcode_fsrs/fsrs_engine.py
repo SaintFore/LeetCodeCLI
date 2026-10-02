@@ -7,7 +7,7 @@ from typing import Iterable, Mapping
 
 from fsrs import Card, Rating as FsrsRating, Scheduler
 
-from .domain import Rating
+from .domain import Review
 
 
 def scheduler_from_preferences(preferences: Mapping[str, object]) -> Scheduler:
@@ -24,32 +24,25 @@ def scheduler_from_preferences(preferences: Mapping[str, object]) -> Scheduler:
 
 def replay_due(
     enrolled_at: datetime,
-    reviews: Iterable[Mapping[str, object]],
+    reviews: Iterable[Review],
     preferences: Mapping[str, object],
 ) -> datetime:
     """Replay immutable review rows and return the current UTC due time."""
-    ordered = sorted(reviews, key=lambda row: (str(row["occurred_at"]), str(row["event_id"])))
+    ordered = sorted(reviews, key=lambda review: (review.occurred_at, review.event_id))
     if not ordered:
         return _utc(enrolled_at)
 
-    first_at = _parse_time(str(ordered[0]["occurred_at"]))
+    first_at = _utc(ordered[0].occurred_at)
     card = Card(due=first_at)
     scheduler = scheduler_from_preferences(preferences)
-    for row in ordered:
-        reviewed_at = _parse_time(str(row["occurred_at"]))
+    for review in ordered:
+        reviewed_at = _utc(review.occurred_at)
         card, _ = scheduler.review_card(
             card,
-            FsrsRating(Rating(str(row["rating"])).number),
+            FsrsRating(review.rating.number),
             review_datetime=reviewed_at,
         )
     return _utc(card.due)
-
-
-def _parse_time(value: str) -> datetime:
-    parsed = datetime.fromisoformat(value)
-    if parsed.tzinfo is None:
-        raise ValueError("review timestamp must include a timezone")
-    return parsed.astimezone(UTC)
 
 
 def _utc(value: datetime) -> datetime:

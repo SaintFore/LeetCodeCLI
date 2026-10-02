@@ -20,6 +20,10 @@ class EventStoreError(RuntimeError):
     pass
 
 
+class EventStoreUnavailableError(EventStoreError):
+    pass
+
+
 @dataclass(frozen=True, slots=True)
 class LibraryManifest:
     schema_version: int
@@ -97,7 +101,9 @@ class EventStore:
         occurred_at: datetime | None = None,
     ) -> StudyEvent:
         if not self.writable():
-            raise EventStoreError(f"Study data directory is unavailable or read-only: {self.root}")
+            raise EventStoreUnavailableError(
+                f"Study data directory is unavailable or read-only: {self.root}"
+            )
         manifest = self.manifest()
         supplied = occurred_at or datetime.now(UTC)
         if supplied.tzinfo is None:

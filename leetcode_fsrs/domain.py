@@ -73,8 +73,16 @@ class DailyPlan:
 
 
 @dataclass(frozen=True, slots=True)
+class Review:
+    event_id: str
+    question_key: str
+    rating: Rating
+    occurred_at: datetime
+    corrected_by: str | None
+
+
+@dataclass(frozen=True, slots=True)
 class ScanProblem:
     path: str
     line: int | None
     message: str
-
