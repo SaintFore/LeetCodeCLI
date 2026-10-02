@@ -275,3 +275,60 @@ def test_all_study_event_commands_reject_a_read_only_library(service, monkeypatc
     for operation in operations:
         with pytest.raises(ReadOnlyLibraryError):
             operation()
+
+
+def test_all_write_intents_return_expected_results_and_refresh_reads(service) -> None:
+    first, second = questions(2)
+    assert service.cache_questions([first, second]) == 2
+
+    account = service.bind_account("alice")
+    enrolled = service.enroll(first.slug)
+    suspended = service.suspend(first.frontend_id)
+    resumed = service.resume(first.key)
+    reviewed = service.rate(first.slug, Rating.AGAIN)
+    corrected = service.correct_review(reviewed.event_id, Rating.EASY)
+    preference = service.set_preference("daily_limit", 12)
+    imported = service.import_accepted([second])
+    service.set_solver_command("nvim +Leet {slug}")
+
+    assert account.type is EventType.ACCOUNT_BOUND
+    assert enrolled and enrolled.type is EventType.CARD_ENROLLED
+    assert suspended.type is EventType.CARD_SUSPENDED
+    assert resumed.type is EventType.CARD_RESUMED
+    assert reviewed.type is EventType.REVIEW_RECORDED
+    assert corrected.type is EventType.REVIEW_CORRECTED
+    assert preference.type is EventType.PREFERENCE_SET
+    assert imported == 1
+    assert [item.state for item in service.questions()] == [CardState.ACTIVE, CardState.ACTIVE]
+    assert service.health().counts == service.health().counts.__class__(2, 2, 1, 0)
+    assert service.settings().daily_limit == 12
+    assert service.solver_input(first.key).command == ("nvim", "+Leet", "{slug}")
+
+
+def test_readable_nonwritable_library_keeps_passive_queries_available(
+    tmp_path: Path,
+    monkeypatch,
+) -> None:
+    shared = tmp_path / "shared"
+    config = LocalConfig(shared_dir=str(shared))
+    store = EventStore.create(shared, config.device_id)
+    store.append(EventType.CARD_ENROLLED, {"question_key": "leetcode.com:two-sum"})
+    writable = ApplicationService(
+        config,
+        config_path=tmp_path / "config.json",
+        database_path=tmp_path / "projection.sqlite3",
+    )
+    writable.cache_questions(
+        [Question("leetcode.com:two-sum", "1", "two-sum", "Two Sum", "Easy")]
+    )
+    monkeypatch.setattr(EventStore, "writable", lambda self: False)
+
+    read_only = ApplicationService(
+        config,
+        config_path=tmp_path / "config.json",
+        database_path=tmp_path / "projection.sqlite3",
+    )
+
+    assert read_only.health().access is LibraryAccess.READ_ONLY
+    assert read_only.questions()[0].state is CardState.ACTIVE
+    assert len(read_only.daily_plan().items) == 1

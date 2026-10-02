@@ -1,7 +1,8 @@
 import pytest
 
 from leetcode_fsrs.domain import Question
-from leetcode_fsrs.services import InvalidOperationError
+from leetcode_fsrs.services import CardState, InvalidOperationError
+from textual.widgets import Static, TabbedContent
 from leetcode_fsrs.tui import LeetCodeFsrsApp
 
 
@@ -57,3 +58,20 @@ async def test_import_does_not_mask_unexpected_application_failures(service, mon
         monkeypatch.setattr(service, "import_accepted", unexpected_failure)
         with pytest.raises(RuntimeError, match="programming defect"):
             app._import_accepted()
+
+
+async def test_question_action_wiring_updates_public_service_state(service) -> None:
+    service.cache_questions(
+        [Question("leetcode.com:two-sum", "1", "two-sum", "Two Sum", "Easy")]
+    )
+    app = LeetCodeFsrsApp(service)
+
+    async with app.run_test() as pilot:
+        tabs = app.query_one(TabbedContent)
+        tabs.active = "questions"
+        await pilot.pause()
+        await pilot.click("#enroll")
+        await pilot.pause()
+
+        assert service.questions()[0].state is CardState.ACTIVE
+        assert "复习卡片: 1" in str(app.query_one("#stats", Static).content)
