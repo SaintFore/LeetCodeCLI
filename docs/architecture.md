@@ -2,8 +2,9 @@
 
 ## Boundaries
 
-- `tui.py` and `cli.py` are adapters. They depend only on the public `ApplicationService`
-  facade and contain no scheduling or persistence policy.
+- `tui.py` and `cli.py` use only the public `ApplicationService` facade for application
+  state and behavior. They retain the credential, LeetCode HTTP, and Solver process
+  adapters required at the system boundary and contain no scheduling or persistence policy.
 - `services.py` owns application queries, command orchestration, question-reference
   resolution, expected operational errors, refresh behavior, and Daily Plan policy.
 - `fsrs_engine.py` is the only adapter to `py-fsrs`.

@@ -237,14 +237,19 @@ class Projection:
 
     def resolve_question(self, reference: str) -> Question | None:
         with self.connect() as db:
-            row = None
-            for column in ("question_key", "slug", "frontend_id"):
+            row = db.execute(
+                "SELECT * FROM questions WHERE question_key = ?", (reference,)
+            ).fetchone()
+            if row is None:
                 row = db.execute(
-                    f"SELECT * FROM questions WHERE {column} = ? ORDER BY question_key LIMIT 1",
-                    (reference,),
+                    "SELECT * FROM questions WHERE slug = ?", (reference,)
                 ).fetchone()
-                if row is not None:
-                    break
+            if row is None:
+                matches = db.execute(
+                    "SELECT * FROM questions WHERE frontend_id = ? ORDER BY question_key LIMIT 2",
+                    (reference,),
+                ).fetchall()
+                row = matches[0] if len(matches) == 1 else None
         return _row_question(row) if row else None
 
     def card_rows(self) -> list[CardRecord]:

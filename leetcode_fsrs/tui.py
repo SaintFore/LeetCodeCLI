@@ -11,7 +11,7 @@ from textual.widgets import Button, DataTable, Footer, Header, Input, Label, Sta
 
 from .domain import PlanItem, Rating
 from .credentials import CredentialStore
-from .leetcode_client import LeetCodeClient
+from .leetcode_client import LeetCodeClient, LeetCodeError
 from .services import ApplicationError, ApplicationService, CardState, LibraryAccess
 from .solver import run_solver
 
@@ -130,12 +130,7 @@ class LeetCodeFsrsApp(App[None]):
     def _text(self, chinese: str, english: str) -> str:
         return english if self.english else chinese
 
-    def refresh_views(self, *, scan_library: bool = False) -> None:
-        if scan_library:
-            try:
-                self.service.refresh()
-            except ApplicationError as error:
-                self.query_one("#health", Label).update(f"错误: {error}")
+    def refresh_views(self) -> None:
         try:
             plan = self.service.daily_plan()
         except ApplicationError as error:
@@ -191,7 +186,12 @@ class LeetCodeFsrsApp(App[None]):
         )
 
     def action_refresh_data(self) -> None:
-        self.refresh_views(scan_library=True)
+        try:
+            self.service.refresh()
+        except ApplicationError as error:
+            self.notify(str(error), severity="error")
+            return
+        self.refresh_views()
         self.notify("已从共享事件日志重建。")
 
     def on_data_table_row_selected(self, event: DataTable.RowSelected) -> None:
@@ -272,7 +272,7 @@ class LeetCodeFsrsApp(App[None]):
             self.service.bind_account(username)
             questions = client.questions()
             enrolled = self.service.import_accepted(questions)
-        except Exception as error:
+        except (ApplicationError, LeetCodeError, ValueError) as error:
             self.call_from_thread(self.notify, str(error), severity="error")
             return
         self.call_from_thread(self.refresh_views)

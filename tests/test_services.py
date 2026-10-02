@@ -4,7 +4,8 @@ from pathlib import Path
 import pytest
 
 from leetcode_fsrs.config import LocalConfig
-from leetcode_fsrs.domain import Question, Rating
+from leetcode_fsrs.domain import EventType, Question, Rating
+from leetcode_fsrs.event_store import EventStore
 from leetcode_fsrs.services import (
     ApplicationService,
     ApplicationSettings,
@@ -14,6 +15,7 @@ from leetcode_fsrs.services import (
     NotConfiguredError,
     QuestionListItem,
     QuestionNotFoundError,
+    ReadOnlyLibraryError,
     SolverInput,
 )
 
@@ -174,3 +176,48 @@ def test_unconfigured_health_is_readable_but_solver_input_is_not(tmp_path: Path)
 def test_review_correction_rejects_an_unknown_study_event(service) -> None:
     with pytest.raises(InvalidOperationError, match="Review event not found"):
         service.correct_review("missing", Rating.GOOD)
+
+
+def test_ambiguous_frontend_id_is_not_resolved(service) -> None:
+    first, second = questions(2)
+    second = Question(
+        second.key,
+        first.frontend_id,
+        second.slug,
+        second.title,
+        second.difficulty,
+    )
+    service.cache_questions([first, second])
+
+    with pytest.raises(QuestionNotFoundError):
+        service.question(first.frontend_id)
+
+
+def test_write_time_permission_failure_is_a_read_only_error(service, monkeypatch) -> None:
+    question = questions(1)[0]
+    service.cache_questions([question])
+
+    def permission_denied(*args, **kwargs):
+        raise PermissionError("permission denied")
+
+    monkeypatch.setattr(EventStore, "append", permission_denied)
+
+    with pytest.raises(ReadOnlyLibraryError, match="read-only"):
+        service.enroll(question.key)
+
+
+def test_explicit_refresh_reports_replicated_events_and_problems(service, tmp_path: Path) -> None:
+    replica = EventStore(
+        tmp_path / "shared",
+        "22222222-2222-4222-8222-222222222222",
+    )
+    replica.append(EventType.CARD_ENROLLED, {"question_key": "leetcode.com:replicated"})
+    event_file = next((tmp_path / "shared" / "events").glob("*/*.ndjson"))
+    with event_file.open("a", encoding="utf-8") as stream:
+        stream.write("{bad json}\n")
+
+    service.refresh()
+
+    health = service.health()
+    assert health.counts.cards == 1
+    assert len(health.scan_problems) == 1

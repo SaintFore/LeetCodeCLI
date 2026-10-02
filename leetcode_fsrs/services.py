@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import errno
 from dataclasses import dataclass
 from datetime import UTC, datetime
 from enum import StrEnum
@@ -13,7 +14,7 @@ from .config import LocalConfig, config_home, data_home
 from .domain import DailyPlan, EventType, PlanItem, Question, Rating, ScanProblem, StudyEvent
 from .event_store import EventStore, EventStoreError
 from .fsrs_engine import replay_due, scheduler_from_preferences
-from .projection import Projection
+from .projection import CardRecord, Projection
 
 
 class ApplicationError(RuntimeError):
@@ -133,7 +134,10 @@ class ApplicationService:
         self._store = store
         self._read_only = False
         self._config.shared_dir = str(resolved)
-        self._config.save(self._config_path)
+        try:
+            self._config.save(self._config_path)
+        except OSError as error:
+            raise InvalidOperationError(f"Could not save local configuration: {error}") from error
         self._append(EventType.PREFERENCE_SET, {"key": "timezone", "value": timezone})
         if username:
             self.bind_account(username)
@@ -158,8 +162,8 @@ class ApplicationService:
             {"username": username, "site": "leetcode.com"},
         )
 
-    def enroll(self, question_key: str, source: str = "manual") -> StudyEvent | None:
-        question_key = self.question(question_key).key
+    def enroll(self, reference: str, source: str = "manual") -> StudyEvent | None:
+        question_key = self.question(reference).key
         if self._projection.card(question_key):
             return None
         return self._append(
@@ -167,35 +171,29 @@ class ApplicationService:
             {"question_key": question_key, "source": source},
         )
 
-    def suspend(self, question_key: str) -> StudyEvent:
-        question_key = self.question(question_key).key
-        card = self._projection.card(question_key)
-        if card is None:
-            raise InvalidOperationError(f"Question is not enrolled: {question_key}")
+    def suspend(self, reference: str) -> StudyEvent:
+        card = self._enrolled_card(reference)
+        question_key = card.question_key
         if card.suspended:
             raise InvalidOperationError(f"Question is already suspended: {question_key}")
         return self._append(EventType.CARD_SUSPENDED, {"question_key": question_key})
 
-    def resume(self, question_key: str) -> StudyEvent:
-        question_key = self.question(question_key).key
-        card = self._projection.card(question_key)
-        if card is None:
-            raise InvalidOperationError(f"Question is not enrolled: {question_key}")
+    def resume(self, reference: str) -> StudyEvent:
+        card = self._enrolled_card(reference)
+        question_key = card.question_key
         if not card.suspended:
             raise InvalidOperationError(f"Question is already active: {question_key}")
         return self._append(EventType.CARD_RESUMED, {"question_key": question_key})
 
     def rate(
         self,
-        question_key: str,
+        reference: str,
         rating: Rating,
         *,
         occurred_at: datetime | None = None,
     ) -> StudyEvent:
-        question_key = self.question(question_key).key
-        card = self._projection.card(question_key)
-        if card is None:
-            raise InvalidOperationError(f"Question is not enrolled: {question_key}")
+        card = self._enrolled_card(reference)
+        question_key = card.question_key
         if card.suspended:
             raise InvalidOperationError(f"Question is suspended: {question_key}")
         return self._append(
@@ -322,7 +320,11 @@ class ApplicationService:
         if not self._config.solver_argv:
             self._config.solver_argv = previous
             raise InvalidOperationError("Solver command cannot be empty")
-        self._config.save(self._config_path)
+        try:
+            self._config.save(self._config_path)
+        except OSError as error:
+            self._config.solver_argv = previous
+            raise InvalidOperationError(f"Could not save local configuration: {error}") from error
 
     def daily_plan(self, now: datetime | None = None) -> DailyPlan:
         preferences = self._preferences()
@@ -375,6 +377,13 @@ class ApplicationService:
             raise NotConfiguredError("No study library configured; run `leetcode-fsrs init`")
         return self._store
 
+    def _enrolled_card(self, reference: str) -> CardRecord:
+        question_key = self.question(reference).key
+        card = self._projection.card(question_key)
+        if card is None:
+            raise InvalidOperationError(f"Question is not enrolled: {question_key}")
+        return card
+
     def _append(
         self,
         event_type: EventType,
@@ -387,7 +396,17 @@ class ApplicationService:
             raise ReadOnlyLibraryError(f"Study library is read-only: {store.root}")
         try:
             event = store.append(event_type, payload, occurred_at=occurred_at)
-        except (OSError, EventStoreError) as error:
+        except OSError as error:
+            if isinstance(error, PermissionError) or error.errno in {
+                errno.EACCES,
+                errno.EPERM,
+                errno.EROFS,
+            }:
+                raise ReadOnlyLibraryError(f"Study library is read-only: {store.root}") from error
+            raise InvalidOperationError(str(error)) from error
+        except EventStoreError as error:
+            if "read-only" in str(error) or "unavailable" in str(error):
+                raise ReadOnlyLibraryError(str(error)) from error
             raise InvalidOperationError(str(error)) from error
         self.refresh()
         return event
