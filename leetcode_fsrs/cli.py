@@ -19,7 +19,6 @@ from .services import (
     QuestionNotFoundError,
 )
 
-
 app = typer.Typer(
     name="leetcode-fsrs",
     help="Terminal-first LeetCode review planner.",
@@ -50,7 +49,9 @@ def launch_tui() -> None:
 
 @app.command("init")
 def initialize(
-    directory: Annotated[Path, typer.Argument(help="Syncthing/WebDAV-synced study directory")],
+    directory: Annotated[
+        Path, typer.Argument(help="Syncthing/WebDAV-synced study directory")
+    ],
     timezone: Annotated[str, typer.Option("--timezone", "-z")] = "Asia/Shanghai",
     username: Annotated[str | None, typer.Option("--username", "-u")] = None,
 ) -> None:
@@ -82,7 +83,9 @@ def today(as_json: Annotated[bool, typer.Option("--json")] = False) -> None:
     if as_json:
         typer.echo(json.dumps(rows, ensure_ascii=False, indent=2))
         return
-    typer.echo(f"Due: {plan.due_backlog}  New: {plan.new_backlog}  Selected: {len(rows)}")
+    typer.echo(
+        f"Due: {plan.due_backlog}  New: {plan.new_backlog}  Selected: {len(rows)}"
+    )
     for row in rows:
         marker = "NEW" if row["new"] else "DUE"
         typer.echo(f"{marker:3} {row['id']:>5}  {row['title']}  [{row['difficulty']}]")
@@ -92,7 +95,9 @@ def today(as_json: Annotated[bool, typer.Option("--json")] = False) -> None:
 def rate(
     question: Annotated[str, typer.Argument(help="Question key, slug, or frontend ID")],
     rating: Annotated[Rating, typer.Argument()],
-    at: Annotated[str | None, typer.Option("--at", help="ISO-8601 timestamp for imports")] = None,
+    at: Annotated[
+        str | None, typer.Option("--at", help="ISO-8601 timestamp for imports")
+    ] = None,
 ) -> None:
     """Record one of the four FSRS ratings."""
     service = ApplicationService.load()
@@ -110,7 +115,9 @@ def import_accepted() -> None:
     service = ApplicationService.load()
     cookie = CredentialStore().load()
     if not cookie:
-        raise typer.BadParameter("No session. Run `leetcode-fsrs auth login` or set LEETCODE_SESSION.")
+        raise typer.BadParameter(
+            "No session. Run `leetcode-fsrs auth login` or set LEETCODE_SESSION."
+        )
     client = LeetCodeClient(cookie)
     username = client.username()
     try:
@@ -119,7 +126,9 @@ def import_accepted() -> None:
         enrolled = service.import_accepted(questions)
     except ApplicationError as error:
         raise typer.BadParameter(str(error)) from error
-    typer.echo(f"Cached {len(questions)} questions; enrolled {enrolled} newly accepted cards.")
+    typer.echo(
+        f"Cached {len(questions)} questions; enrolled {enrolled} newly accepted cards."
+    )
 
 
 @app.command("status")
@@ -129,7 +138,9 @@ def status() -> None:
     health = service.health()
     typer.echo(f"Library: {health.shared_path or 'not configured'}")
     typer.echo(f"Account: {health.account or 'not bound'}")
-    typer.echo(f"Read-only: {'yes' if health.access is LibraryAccess.READ_ONLY else 'no'}")
+    typer.echo(
+        f"Read-only: {'yes' if health.access is LibraryAccess.READ_ONLY else 'no'}"
+    )
     counts = health.counts
     typer.echo(
         f"questions: {counts.questions}  cards: {counts.cards}  "
@@ -144,7 +155,9 @@ def status() -> None:
 
 @auth_app.command("login")
 def auth_login(
-    session: Annotated[str | None, typer.Option("--session", help="Prefer the hidden prompt")]=None,
+    session: Annotated[
+        str | None, typer.Option("--session", help="Prefer the hidden prompt")
+    ] = None,
 ) -> None:
     """Validate and save LEETCODE_SESSION in the system keyring."""
     value = session or typer.prompt("LEETCODE_SESSION", hide_input=True)
@@ -199,9 +212,18 @@ def card_resume(question: str) -> None:
 @config_app.command("set")
 def config_set(key: str, value: str) -> None:
     """Set a portable preference (JSON values are accepted)."""
-    allowed = {"timezone", "daily_limit", "new_limit", "desired_retention", "language", "fsrs_parameters"}
+    allowed = {
+        "timezone",
+        "daily_limit",
+        "new_limit",
+        "desired_retention",
+        "language",
+        "fsrs_parameters",
+    }
     if key not in allowed:
-        raise typer.BadParameter(f"Unknown preference; choose one of: {', '.join(sorted(allowed))}")
+        raise typer.BadParameter(
+            f"Unknown preference; choose one of: {', '.join(sorted(allowed))}"
+        )
     try:
         parsed = json.loads(value)
     except json.JSONDecodeError:
@@ -225,7 +247,11 @@ def config_solver(command: str) -> None:
 
 
 def _question_error(error: ApplicationError) -> typer.BadParameter:
-    suffix = ". Run import-accepted first." if isinstance(error, QuestionNotFoundError) else ""
+    suffix = (
+        ". Run import-accepted first."
+        if isinstance(error, QuestionNotFoundError)
+        else ""
+    )
     return typer.BadParameter(f"{error}{suffix}")
 
 

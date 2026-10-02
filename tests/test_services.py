@@ -55,7 +55,10 @@ def test_due_cards_precede_new_and_suspend_is_excluded(service) -> None:
 
     plan = service.daily_plan()
 
-    assert [item.question_key for item in plan.items] == [catalog[0].key, catalog[2].key]
+    assert [item.question_key for item in plan.items] == [
+        catalog[0].key,
+        catalog[2].key,
+    ]
     assert plan.items[0].is_new is False
 
 
@@ -83,7 +86,9 @@ def test_first_review_today_consumes_daily_new_limit(service) -> None:
     assert len([item for item in plan.items if item.is_new]) == 4
 
 
-def test_question_queries_return_immutable_typed_values_and_resolve_every_reference(service) -> None:
+def test_question_queries_return_immutable_typed_values_and_resolve_every_reference(
+    service,
+) -> None:
     question = questions(1)[0]
     service.cache_questions([question])
 
@@ -94,7 +99,9 @@ def test_question_queries_return_immutable_typed_values_and_resolve_every_refere
 
     service.enroll(question.slug)
 
-    assert service.questions("Question") == (QuestionListItem(question, CardState.ACTIVE),)
+    assert service.questions("Question") == (
+        QuestionListItem(question, CardState.ACTIVE),
+    )
     with pytest.raises(QuestionNotFoundError, match="Unknown question"):
         service.question("missing")
 
@@ -123,7 +130,9 @@ def test_health_settings_and_solver_input_hide_application_internals(service) ->
         fsrs_parameters=None,
         solver_command=("nvim", "+Leet", "{slug}"),
     )
-    assert service.solver_input("1") == SolverInput(question, ("nvim", "+Leet", "{slug}"))
+    assert service.solver_input("1") == SolverInput(
+        question, ("nvim", "+Leet", "{slug}")
+    )
 
 
 def test_commands_resolve_references_and_report_invalid_transitions(service) -> None:
@@ -155,10 +164,14 @@ def test_question_search_does_not_refresh_study_events(service, monkeypatch) -> 
 
     monkeypatch.setattr(service, "refresh", unexpected_refresh)
 
-    assert service.questions("q-1") == (QuestionListItem(question, CardState.NOT_ENROLLED),)
+    assert service.questions("q-1") == (
+        QuestionListItem(question, CardState.NOT_ENROLLED),
+    )
 
 
-def test_unconfigured_health_is_readable_but_solver_input_is_not(tmp_path: Path) -> None:
+def test_unconfigured_health_is_readable_but_solver_input_is_not(
+    tmp_path: Path,
+) -> None:
     service = ApplicationService(
         LocalConfig(),
         config_path=tmp_path / "config.json",
@@ -193,7 +206,9 @@ def test_ambiguous_frontend_id_is_not_resolved(service) -> None:
         service.question(first.frontend_id)
 
 
-def test_write_time_permission_failure_is_a_read_only_error(service, monkeypatch) -> None:
+def test_write_time_permission_failure_is_a_read_only_error(
+    service, monkeypatch
+) -> None:
     question = questions(1)[0]
     service.cache_questions([question])
 
@@ -206,7 +221,9 @@ def test_write_time_permission_failure_is_a_read_only_error(service, monkeypatch
         service.enroll(question.key)
 
 
-def test_explicit_refresh_reports_replicated_events_and_problems(service, tmp_path: Path) -> None:
+def test_explicit_refresh_reports_replicated_events_and_problems(
+    service, tmp_path: Path
+) -> None:
     replica = EventStore(
         tmp_path / "shared",
         "22222222-2222-4222-8222-222222222222",
@@ -254,7 +271,9 @@ def test_health_reports_semantic_problems(service, tmp_path: Path) -> None:
     )
 
 
-def test_all_study_event_commands_reject_a_read_only_library(service, monkeypatch) -> None:
+def test_all_study_event_commands_reject_a_read_only_library(
+    service, monkeypatch
+) -> None:
     first, second, third = questions(3)
     service.cache_questions([first, second, third])
     service.enroll(first.key)
@@ -299,7 +318,10 @@ def test_all_write_intents_return_expected_results_and_refresh_reads(service) ->
     assert corrected.type is EventType.REVIEW_CORRECTED
     assert preference.type is EventType.PREFERENCE_SET
     assert imported == 1
-    assert [item.state for item in service.questions()] == [CardState.ACTIVE, CardState.ACTIVE]
+    assert [item.state for item in service.questions()] == [
+        CardState.ACTIVE,
+        CardState.ACTIVE,
+    ]
     assert service.health().counts == service.health().counts.__class__(2, 2, 1, 0)
     assert service.settings().daily_limit == 12
     assert service.solver_input(first.key).command == ("nvim", "+Leet", "{slug}")

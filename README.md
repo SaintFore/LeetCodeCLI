@@ -96,6 +96,23 @@ leetcode-fsrs config solver 'my-solver {slug} {url}'
 
 解题进程还会收到 `LEETCODE_FSRS_KEY`、`LEETCODE_FSRS_SLUG` 和 `LEETCODE_FSRS_URL` 环境变量。
 
+### TUI 键盘操作
+
+| 按键 | 操作 |
+| --- | --- |
+| `h` / `l` | 切换到上一个 / 下一个标签页 |
+| `j` / `k` | 在 Today 或 Questions 表格中下移 / 上移 |
+| `g` / `G` | 跳到表格首行 / 末行 |
+| `Enter` 或 `o` | 在 Today 打开当前题目的解题器 |
+| `s` | 在 Today 跳过，或在 Questions 暂停当前题目 |
+| `1` / `2` / `3` / `4` | 记录 Again / Hard / Good / Easy |
+| `/` / `Esc` | 聚焦 Questions 搜索框 / 返回表格 |
+| `e` / `u` | 在 Questions 加入复习 / 恢复当前题目 |
+| `i` | 在 Data 导入 Accepted 题目 |
+| `r` / `q` | 刷新数据 / 退出 |
+
+输入框获得焦点时，字母键用于输入文字。方向键、Tab、按钮 Enter 操作和鼠标仍然可用；Footer 会显示当前页面可用的快捷键。
+
 ### CLI 速查
 
 | 命令 | 用途 |
@@ -138,9 +155,10 @@ shared-directory/
 python -m venv .venv
 source .venv/bin/activate
 pip install -e '.[test]'
-pytest -q
-pyright
+./scripts/check.sh
 ```
+
+统一入口依次运行 Ruff lint、Ruff 格式检查、Pyright、pytest 和隔离的 CLI smoke test，并在最后汇总所有失败项。
 
 Arch Linux 打包配置位于 `packaging/aur-git/`；也可使用 `scripts/build_arch_package.sh` 调用 `paru` 进行本地构建。
 
@@ -221,6 +239,23 @@ leetcode-fsrs config solver 'my-solver {slug} {url}'
 
 The solver process also receives `LEETCODE_FSRS_KEY`, `LEETCODE_FSRS_SLUG`, and `LEETCODE_FSRS_URL` environment variables.
 
+### TUI keyboard controls
+
+| Key | Action |
+| --- | --- |
+| `h` / `l` | Switch to the previous / next tab |
+| `j` / `k` | Move down / up in the Today or Questions table |
+| `g` / `G` | Jump to the first / last table row |
+| `Enter` or `o` | Open the selected solver from Today |
+| `s` | Skip in Today, or suspend the selected question in Questions |
+| `1` / `2` / `3` / `4` | Record Again / Hard / Good / Easy |
+| `/` / `Esc` | Focus the Questions search / return to its table |
+| `e` / `u` | Enroll / resume the selected question in Questions |
+| `i` | Import Accepted problems from Data |
+| `r` / `q` | Refresh data / quit |
+
+Letter keys enter text while an input has focus. Arrow keys, Tab, Enter on buttons, and the mouse remain available; the Footer shows the shortcuts for the current page.
+
 ### CLI reference
 
 | Command | Purpose |
@@ -263,8 +298,9 @@ See [Study data replication](docs/sync.md) and [Architecture](docs/architecture.
 python -m venv .venv
 source .venv/bin/activate
 pip install -e '.[test]'
-pytest -q
-pyright
+./scripts/check.sh
 ```
+
+The unified entry point runs Ruff lint, Ruff formatting checks, Pyright, pytest, and an isolated CLI smoke test in order, then summarizes every failed stage.
 
 The Arch Linux package lives in `packaging/aur-git/`. You can also build it locally through `scripts/build_arch_package.sh`, which invokes `paru`.

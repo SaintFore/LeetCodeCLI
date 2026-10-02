@@ -7,7 +7,9 @@ from leetcode_fsrs.projection import CardRecord, Projection
 
 
 def test_projection_maps_sql_rows_to_typed_values(tmp_path: Path) -> None:
-    library = EventStore.create(tmp_path / "shared", "11111111-1111-4111-8111-111111111111")
+    library = EventStore.create(
+        tmp_path / "shared", "11111111-1111-4111-8111-111111111111"
+    )
     occurred_at = datetime(2026, 1, 1, tzinfo=UTC)
     library.append(
         EventType.CARD_ENROLLED,

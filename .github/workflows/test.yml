@@ -8,7 +8,7 @@ on:
     branches: [main]
 
 jobs:
-  typecheck:
+  quality:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
@@ -17,18 +17,14 @@ jobs:
           python-version: "3.11"
       - run: python -m venv .venv
       - run: .venv/bin/python -m pip install -e '.[test]'
-      - run: .venv/bin/pyright
+      - run: scripts/check.sh
 
-  test:
+  compatibility:
     runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        python-version: ["3.11", "3.14"]
     steps:
       - uses: actions/checkout@v7
       - uses: actions/setup-python@v7
         with:
-          python-version: ${{ matrix.python-version }}
+          python-version: "3.14"
       - run: python -m pip install -e '.[test]'
       - run: pytest -q
-      - run: leetcode-fsrs --help

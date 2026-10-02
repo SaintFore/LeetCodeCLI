@@ -3,7 +3,9 @@ from pathlib import Path
 
 def test_production_adapters_only_use_the_public_application_service() -> None:
     root = Path(__file__).parents[1] / "leetcode_fsrs"
-    sources = "\n".join((root / name).read_text(encoding="utf-8") for name in ("cli.py", "tui.py"))
+    sources = "\n".join(
+        (root / name).read_text(encoding="utf-8") for name in ("cli.py", "tui.py")
+    )
 
     for internal_name in (
         ".projection",

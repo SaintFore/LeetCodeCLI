@@ -1,5 +1,5 @@
-from pathlib import Path
 import json
+from pathlib import Path
 
 from typer.testing import CliRunner
 
@@ -14,7 +14,9 @@ def test_init_and_status_use_xdg_paths(tmp_path: Path, monkeypatch) -> None:
     shared = tmp_path / "shared"
     runner = CliRunner()
 
-    initialized = runner.invoke(app, ["init", str(shared), "--timezone", "UTC", "--username", "alice"])
+    initialized = runner.invoke(
+        app, ["init", str(shared), "--timezone", "UTC", "--username", "alice"]
+    )
     status = runner.invoke(app, ["status"])
 
     assert initialized.exit_code == 0, initialized.output
@@ -23,7 +25,9 @@ def test_init_and_status_use_xdg_paths(tmp_path: Path, monkeypatch) -> None:
     assert "alice" in status.output
 
 
-def test_question_errors_are_translated_to_typer_errors(tmp_path: Path, monkeypatch) -> None:
+def test_question_errors_are_translated_to_typer_errors(
+    tmp_path: Path, monkeypatch
+) -> None:
     monkeypatch.setenv("XDG_CONFIG_HOME", str(tmp_path / "config"))
     monkeypatch.setenv("XDG_DATA_HOME", str(tmp_path / "data"))
 
@@ -33,7 +37,9 @@ def test_question_errors_are_translated_to_typer_errors(tmp_path: Path, monkeypa
     assert "Unknown question: missing" in result.output
 
 
-def test_cli_commands_preserve_parsing_outputs_and_service_wiring(tmp_path: Path, monkeypatch) -> None:
+def test_cli_commands_preserve_parsing_outputs_and_service_wiring(
+    tmp_path: Path, monkeypatch
+) -> None:
     monkeypatch.setenv("XDG_CONFIG_HOME", str(tmp_path / "config"))
     monkeypatch.setenv("XDG_DATA_HOME", str(tmp_path / "data"))
     runner = CliRunner()
@@ -52,7 +58,10 @@ def test_cli_commands_preserve_parsing_outputs_and_service_wiring(tmp_path: Path
     today = runner.invoke(app, ["today", "--json"])
     status = runner.invoke(app, ["status"])
 
-    assert all(result.exit_code == 0 for result in (enrolled, suspended, resumed, configured, solver, today, status))
+    assert all(
+        result.exit_code == 0
+        for result in (enrolled, suspended, resumed, configured, solver, today, status)
+    )
     assert configured.output == "daily_limit = 12\n"
     assert solver.output == "Solver command updated for this device.\n"
     assert json.loads(today.output)[0]["key"] == "leetcode.com:two-sum"

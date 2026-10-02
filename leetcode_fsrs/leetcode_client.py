@@ -8,7 +8,6 @@ import requests
 
 from .domain import Question
 
-
 BASE_URL = "https://leetcode.com"
 GRAPHQL_URL = f"{BASE_URL}/graphql"
 
@@ -39,20 +38,27 @@ class LeetCodeClient:
                 break
 
     def username(self) -> str:
-        data = self._graphql(
-            "query globalData { userStatus { isSignedIn username } }"
-        ).get("userStatus") or {}
+        data = (
+            self._graphql(
+                "query globalData { userStatus { isSignedIn username } }"
+            ).get("userStatus")
+            or {}
+        )
         if not data.get("isSignedIn") or not data.get("username"):
             raise LeetCodeError("LeetCode session is invalid or expired")
         return str(data["username"])
 
     def questions(self) -> list[Question]:
         try:
-            response = self.session.get(f"{BASE_URL}/api/problems/all/", timeout=self.timeout)
+            response = self.session.get(
+                f"{BASE_URL}/api/problems/all/", timeout=self.timeout
+            )
             response.raise_for_status()
             payload = response.json()
         except (requests.RequestException, ValueError) as error:
-            raise LeetCodeError(f"Could not fetch LeetCode problem catalog: {error}") from error
+            raise LeetCodeError(
+                f"Could not fetch LeetCode problem catalog: {error}"
+            ) from error
 
         questions: list[Question] = []
         difficulties = {1: "Easy", 2: "Medium", 3: "Hard"}
@@ -65,7 +71,11 @@ class LeetCodeClient:
             questions.append(
                 Question(
                     key=f"leetcode.com:{slug}",
-                    frontend_id=str(stat.get("frontend_question_id") or stat.get("question_id") or "?"),
+                    frontend_id=str(
+                        stat.get("frontend_question_id")
+                        or stat.get("question_id")
+                        or "?"
+                    ),
                     slug=slug,
                     title=str(stat.get("question__title") or slug),
                     difficulty=(
@@ -81,7 +91,9 @@ class LeetCodeClient:
             raise LeetCodeError("LeetCode returned an empty problem catalog")
         return questions
 
-    def _graphql(self, query: str, variables: dict[str, Any] | None = None) -> dict[str, Any]:
+    def _graphql(
+        self, query: str, variables: dict[str, Any] | None = None
+    ) -> dict[str, Any]:
         try:
             response = self.session.post(
                 GRAPHQL_URL,

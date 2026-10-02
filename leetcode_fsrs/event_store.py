@@ -5,13 +5,13 @@ from __future__ import annotations
 import json
 import os
 import uuid
+from collections.abc import Iterable
 from dataclasses import asdict, dataclass
 from datetime import UTC, datetime
 from pathlib import Path
-from typing import Any, Iterable
+from typing import Any
 
 from .domain import EventType, ScanProblem, StudyEvent
-
 
 SCHEMA_VERSION = 1
 
@@ -49,7 +49,9 @@ class EventStore:
         return self.root / "library.json"
 
     @classmethod
-    def create(cls, root: Path, device_id: str, site: str = "leetcode.com") -> "EventStore":
+    def create(
+        cls, root: Path, device_id: str, site: str = "leetcode.com"
+    ) -> EventStore:
         root.mkdir(parents=True, exist_ok=True)
         path = root / "library.json"
         if path.exists():
@@ -121,9 +123,14 @@ class EventStore:
             payload=payload,
         )
         _validate_event(event)
-        target = self.root / "events" / self.device_id / f"{now.date().isoformat()}.ndjson"
+        target = (
+            self.root / "events" / self.device_id / f"{now.date().isoformat()}.ndjson"
+        )
         target.parent.mkdir(parents=True, exist_ok=True)
-        encoded = json.dumps(_event_to_dict(event), ensure_ascii=False, separators=(",", ":")) + "\n"
+        encoded = (
+            json.dumps(_event_to_dict(event), ensure_ascii=False, separators=(",", ":"))
+            + "\n"
+        )
         with target.open("a", encoding="utf-8") as stream:
             stream.write(encoded)
             stream.flush()
@@ -157,7 +164,9 @@ class EventStore:
                     events[event.event_id] = event
                 except (ValueError, TypeError, KeyError, json.JSONDecodeError) as error:
                     problems.append(ScanProblem(str(path), line_number, str(error)))
-        ordered = sorted(events.values(), key=lambda item: (item.occurred_at, item.event_id))
+        ordered = sorted(
+            events.values(), key=lambda item: (item.occurred_at, item.event_id)
+        )
         return ScanResult(tuple(ordered), tuple(problems))
 
     def _max_device_sequence(self) -> int:
@@ -238,6 +247,8 @@ def _validate_event(event: StudyEvent) -> None:
         Rating(str(payload["rating"]))
 
 
-def write_events(store: EventStore, events: Iterable[tuple[EventType, dict[str, Any]]]) -> None:
+def write_events(
+    store: EventStore, events: Iterable[tuple[EventType, dict[str, Any]]]
+) -> None:
     for event_type, payload in events:
         store.append(event_type, payload)

@@ -24,6 +24,7 @@ test = [
   "pyright>=1.1,<2",
   "pytest>=8.4,<9",
   "pytest-asyncio>=1.2,<2",
+  "ruff>=0.13,<1",
 ]
 
 [project.scripts]
@@ -42,3 +43,6 @@ include = ["leetcode_fsrs", "tests"]
 pythonVersion = "3.11"
 venv = ".venv"
 venvPath = "."
+
+[tool.ruff]
+target-version = "py311"

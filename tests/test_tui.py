@@ -1,14 +1,22 @@
-import pytest
+from contextlib import nullcontext
+from pathlib import Path
 
+import pytest
+from textual.widgets import Button, DataTable, Input, Static, TabbedContent
+
+from leetcode_fsrs.config import LocalConfig
 from leetcode_fsrs.domain import Question
-from leetcode_fsrs.services import CardState, InvalidOperationError
-from textual.widgets import DataTable, Static, TabbedContent
+from leetcode_fsrs.services import ApplicationService, CardState, InvalidOperationError
 from leetcode_fsrs.tui import LeetCodeFsrsApp
 
 
 async def test_tui_mounts_all_primary_views(service) -> None:
     service.cache_questions(
-        [Question("leetcode.com:two-sum", "1", "two-sum", "Two Sum", "Easy", accepted=True)]
+        [
+            Question(
+                "leetcode.com:two-sum", "1", "two-sum", "Two Sum", "Easy", accepted=True
+            )
+        ]
     )
     service.enroll("leetcode.com:two-sum")
     app = LeetCodeFsrsApp(service)
@@ -23,7 +31,9 @@ async def test_tui_mounts_all_primary_views(service) -> None:
         assert app.query_one("#settings")
 
 
-async def test_explicit_refresh_does_not_report_success_after_failure(service, monkeypatch) -> None:
+async def test_explicit_refresh_does_not_report_success_after_failure(
+    service, monkeypatch
+) -> None:
     app = LeetCodeFsrsApp(service)
     notifications: list[tuple[str, str | None]] = []
 
@@ -43,14 +53,22 @@ async def test_explicit_refresh_does_not_report_success_after_failure(service, m
     assert notifications == [("library unavailable", "error")]
 
 
-async def test_import_does_not_mask_unexpected_application_failures(service, monkeypatch) -> None:
+async def test_import_does_not_mask_unexpected_application_failures(
+    service, monkeypatch
+) -> None:
     app = LeetCodeFsrsApp(service)
 
     async with app.run_test() as pilot:
         await pilot.pause()
-        monkeypatch.setattr("leetcode_fsrs.tui.CredentialStore.load", lambda self: "session")
-        monkeypatch.setattr("leetcode_fsrs.tui.LeetCodeClient.username", lambda self: "alice")
-        monkeypatch.setattr("leetcode_fsrs.tui.LeetCodeClient.questions", lambda self: [])
+        monkeypatch.setattr(
+            "leetcode_fsrs.tui.CredentialStore.load", lambda self: "session"
+        )
+        monkeypatch.setattr(
+            "leetcode_fsrs.tui.LeetCodeClient.username", lambda self: "alice"
+        )
+        monkeypatch.setattr(
+            "leetcode_fsrs.tui.LeetCodeClient.questions", lambda self: []
+        )
 
         def unexpected_failure(questions):
             raise RuntimeError("programming defect")
@@ -67,11 +85,148 @@ async def test_question_action_wiring_updates_public_service_state(service) -> N
     app = LeetCodeFsrsApp(service)
 
     async with app.run_test() as pilot:
-        tabs = app.query_one(TabbedContent)
-        tabs.active = "questions"
-        await pilot.pause()
+        await pilot.click("#--content-tab-questions")
         await pilot.click("#enroll")
         await pilot.pause()
 
         assert service.questions()[0].state is CardState.ACTIVE
         assert "复习卡片: 1" in str(app.query_one("#stats", Static).content)
+
+
+async def test_vim_navigation_switches_tabs_and_enrolls_selected_question(
+    service,
+) -> None:
+    service.cache_questions(
+        [
+            Question("leetcode.com:one", "1", "one", "One", "Easy"),
+            Question("leetcode.com:two", "2", "two", "Two", "Medium"),
+        ]
+    )
+    app = LeetCodeFsrsApp(service)
+
+    async with app.run_test() as pilot:
+        await pilot.press("l")
+
+        tabs = app.query_one(TabbedContent)
+        table = app.query_one("#questions-table", DataTable)
+        assert tabs.active == "questions"
+        assert table.has_focus
+
+        await pilot.press("j", "e")
+
+        states = {item.question.slug: item.state for item in service.questions()}
+        assert states == {"one": CardState.NOT_ENROLLED, "two": CardState.ACTIVE}
+
+
+async def test_search_input_consumes_shortcut_letters_until_escape(service) -> None:
+    service.cache_questions([Question("leetcode.com:jle", "1", "jle", "JLE", "Easy")])
+    app = LeetCodeFsrsApp(service)
+
+    async with app.run_test() as pilot:
+        await pilot.press("l", "slash", "j", "l", "e")
+
+        search = app.query_one("#question-search", Input)
+        assert search.has_focus
+        assert search.value == "jle"
+        assert service.questions()[0].state is CardState.NOT_ENROLLED
+
+        await pilot.press("escape")
+
+        assert app.query_one("#questions-table", DataTable).has_focus
+
+
+async def test_user_can_solve_and_grade_from_the_keyboard(service, monkeypatch) -> None:
+    service.cache_questions(
+        [Question("leetcode.com:two-sum", "1", "two-sum", "Two Sum", "Easy")]
+    )
+    service.enroll("leetcode.com:two-sum")
+    launched: list[str] = []
+
+    def record_solver(command, question) -> int:
+        launched.append(question.slug)
+        return 0
+
+    monkeypatch.setattr("leetcode_fsrs.tui.run_solver", record_solver)
+    app = LeetCodeFsrsApp(service)
+    monkeypatch.setattr(app, "suspend", nullcontext)
+
+    async with app.run_test() as pilot:
+        assert app.query_one("#today-table", DataTable).has_focus
+        await pilot.press("enter", "3")
+
+        assert launched == ["two-sum"]
+        assert service.health().counts.reviews == 1
+
+
+async def test_question_keys_navigate_and_change_card_state(service) -> None:
+    service.cache_questions(
+        [
+            Question("leetcode.com:one", "1", "one", "One", "Easy"),
+            Question("leetcode.com:two", "2", "two", "Two", "Medium"),
+            Question("leetcode.com:three", "3", "three", "Three", "Hard"),
+        ]
+    )
+    app = LeetCodeFsrsApp(service)
+
+    async with app.run_test() as pilot:
+        await pilot.press("l", "G", "k", "e")
+        assert service.questions()[1].state is CardState.ACTIVE
+
+        await pilot.press("j", "s")
+        assert service.questions()[1].state is CardState.SUSPENDED
+
+        await pilot.press("j", "u")
+        assert service.questions()[1].state is CardState.ACTIVE
+
+        await pilot.press("g")
+        assert app.query_one("#questions-table", DataTable).cursor_row == 0
+
+
+async def test_data_tab_focuses_import_and_starts_it_from_the_keyboard(
+    service, monkeypatch
+) -> None:
+    app = LeetCodeFsrsApp(service)
+    submitted: list[dict[str, object]] = []
+
+    def record_worker(work, **kwargs):
+        submitted.append(kwargs)
+
+    monkeypatch.setattr(app, "run_worker", record_worker)
+
+    async with app.run_test() as pilot:
+        await pilot.press("l", "l", "l")
+
+        assert app.query_one(TabbedContent).active == "data-tab"
+        assert app.query_one("#import-accepted", Button).has_focus
+
+        await pilot.press("i")
+
+        assert submitted == [
+            {"thread": True, "exclusive": True, "group": "leetcode-import"}
+        ]
+
+        await pilot.press("h")
+        assert app.query_one(TabbedContent).active == "stats-tab"
+
+
+async def test_first_run_setup_submits_with_enter_and_focuses_today(
+    tmp_path: Path,
+) -> None:
+    service = ApplicationService(
+        LocalConfig(),
+        config_path=tmp_path / "config.json",
+        database_path=tmp_path / "projection.sqlite3",
+    )
+    app = LeetCodeFsrsApp(service)
+
+    async with app.run_test() as pilot:
+        directory = app.screen.query_one("#setup-directory", Input)
+        timezone = app.screen.query_one("#setup-timezone", Input)
+        directory.value = str(tmp_path / "shared")
+        timezone.focus()
+
+        await pilot.press("enter")
+        await pilot.pause()
+
+        assert service.health().shared_path == str((tmp_path / "shared").resolve())
+        assert app.query_one("#today-table", DataTable).has_focus

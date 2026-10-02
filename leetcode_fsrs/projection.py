@@ -4,11 +4,11 @@ from __future__ import annotations
 
 import json
 import sqlite3
+from collections.abc import Iterable, Iterator
 from contextlib import contextmanager
 from dataclasses import dataclass
 from datetime import UTC, datetime
 from pathlib import Path
-from typing import Iterable, Iterator
 
 from .domain import EventType, Question, Rating, Review, StudyEvent
 
@@ -124,9 +124,13 @@ class Projection:
                 )
                 if event.type == EventType.ACCOUNT_BOUND:
                     username = str(payload["username"])
-                    existing = db.execute("SELECT username FROM account WHERE singleton = 1").fetchone()
+                    existing = db.execute(
+                        "SELECT username FROM account WHERE singleton = 1"
+                    ).fetchone()
                     if existing and existing["username"] != username:
-                        errors.append(f"study library is already bound to {existing['username']}")
+                        errors.append(
+                            f"study library is already bound to {existing['username']}"
+                        )
                     else:
                         db.execute(
                             "INSERT OR REPLACE INTO account VALUES (1, ?, ?)",
@@ -135,12 +139,19 @@ class Projection:
                 elif event.type == EventType.CARD_ENROLLED:
                     db.execute(
                         "INSERT OR IGNORE INTO cards(question_key, enrolled_at, source) VALUES (?, ?, ?)",
-                        (str(payload["question_key"]), event.occurred_at.isoformat(), str(payload.get("source", "manual"))),
+                        (
+                            str(payload["question_key"]),
+                            event.occurred_at.isoformat(),
+                            str(payload.get("source", "manual")),
+                        ),
                     )
                 elif event.type in (EventType.CARD_SUSPENDED, EventType.CARD_RESUMED):
                     db.execute(
                         "UPDATE cards SET suspended = ? WHERE question_key = ?",
-                        (event.type == EventType.CARD_SUSPENDED, str(payload["question_key"])),
+                        (
+                            event.type == EventType.CARD_SUSPENDED,
+                            str(payload["question_key"]),
+                        ),
                     )
                 elif event.type == EventType.REVIEW_RECORDED:
                     correction = corrections.get(event.event_id)
@@ -211,7 +222,9 @@ class Projection:
                 ],
             )
 
-    def questions(self, search: str = "", enrolled_only: bool = False) -> list[Question]:
+    def questions(
+        self, search: str = "", enrolled_only: bool = False
+    ) -> list[Question]:
         clauses: list[str] = []
         params: list[object] = []
         if search:
@@ -232,7 +245,9 @@ class Projection:
 
     def question(self, key: str) -> Question | None:
         with self.connect() as db:
-            row = db.execute("SELECT * FROM questions WHERE question_key = ?", (key,)).fetchone()
+            row = db.execute(
+                "SELECT * FROM questions WHERE question_key = ?", (key,)
+            ).fetchone()
         return _row_question(row) if row else None
 
     def resolve_question(self, reference: str) -> Question | None:
@@ -291,7 +306,9 @@ class Projection:
 
     def has_review(self, event_id: str) -> bool:
         with self.connect() as db:
-            row = db.execute("SELECT 1 FROM reviews WHERE event_id = ?", (event_id,)).fetchone()
+            row = db.execute(
+                "SELECT 1 FROM reviews WHERE event_id = ?", (event_id,)
+            ).fetchone()
         return row is not None
 
     def review_activity_since(self, since: datetime) -> tuple[int, int]:
@@ -318,12 +335,16 @@ class Projection:
 
     def preference(self, key: str, default: object = None) -> object:
         with self.connect() as db:
-            row = db.execute("SELECT value_json FROM preferences WHERE key = ?", (key,)).fetchone()
+            row = db.execute(
+                "SELECT value_json FROM preferences WHERE key = ?", (key,)
+            ).fetchone()
         return json.loads(row["value_json"]) if row else default
 
     def account(self) -> str | None:
         with self.connect() as db:
-            row = db.execute("SELECT username FROM account WHERE singleton = 1").fetchone()
+            row = db.execute(
+                "SELECT username FROM account WHERE singleton = 1"
+            ).fetchone()
         return str(row["username"]) if row else None
 
     def counts(self) -> dict[str, int]:
@@ -331,8 +352,12 @@ class Projection:
             return {
                 "questions": db.execute("SELECT COUNT(*) FROM questions").fetchone()[0],
                 "cards": db.execute("SELECT COUNT(*) FROM cards").fetchone()[0],
-                "reviews": db.execute("SELECT COUNT(*) FROM reviews WHERE voided = 0").fetchone()[0],
-                "suspended": db.execute("SELECT COUNT(*) FROM cards WHERE suspended = 1").fetchone()[0],
+                "reviews": db.execute(
+                    "SELECT COUNT(*) FROM reviews WHERE voided = 0"
+                ).fetchone()[0],
+                "suspended": db.execute(
+                    "SELECT COUNT(*) FROM cards WHERE suspended = 1"
+                ).fetchone()[0],
             }
 
 
@@ -363,8 +388,12 @@ def _row_card(row: sqlite3.Row) -> CardRecord:
             else None
         ),
         slug=str(row["slug"]) if "slug" in keys and row["slug"] is not None else None,
-        title=str(row["title"]) if "title" in keys and row["title"] is not None else None,
-        difficulty=str(row["difficulty"]) if "difficulty" in keys and row["difficulty"] is not None else None,
+        title=str(row["title"])
+        if "title" in keys and row["title"] is not None
+        else None,
+        difficulty=str(row["difficulty"])
+        if "difficulty" in keys and row["difficulty"] is not None
+        else None,
     )
 
 
@@ -374,5 +403,7 @@ def _row_review(row: sqlite3.Row) -> Review:
         question_key=str(row["question_key"]),
         rating=Rating(str(row["rating"])),
         occurred_at=datetime.fromisoformat(str(row["occurred_at"])),
-        corrected_by=str(row["corrected_by"]) if row["corrected_by"] is not None else None,
+        corrected_by=str(row["corrected_by"])
+        if row["corrected_by"] is not None
+        else None,
     )

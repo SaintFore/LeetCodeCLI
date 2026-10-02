@@ -9,7 +9,6 @@ import uuid
 from dataclasses import asdict, dataclass, field
 from pathlib import Path
 
-
 APP_NAME = "leetcode-fsrs"
 
 
@@ -18,7 +17,9 @@ def config_home() -> Path:
 
 
 def data_home() -> Path:
-    return Path(os.environ.get("XDG_DATA_HOME", Path.home() / ".local/share")) / APP_NAME
+    return (
+        Path(os.environ.get("XDG_DATA_HOME", Path.home() / ".local/share")) / APP_NAME
+    )
 
 
 @dataclass(slots=True)
@@ -28,7 +29,7 @@ class LocalConfig:
     solver_argv: list[str] = field(default_factory=lambda: ["nvim", "+Leet"])
 
     @classmethod
-    def load(cls, path: Path | None = None) -> "LocalConfig":
+    def load(cls, path: Path | None = None) -> LocalConfig:
         path = path or config_home() / "config.json"
         if not path.exists():
             return cls()
@@ -43,7 +44,10 @@ class LocalConfig:
         path = path or config_home() / "config.json"
         path.parent.mkdir(parents=True, exist_ok=True)
         temporary = path.with_suffix(".tmp")
-        temporary.write_text(json.dumps(asdict(self), ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+        temporary.write_text(
+            json.dumps(asdict(self), ensure_ascii=False, indent=2) + "\n",
+            encoding="utf-8",
+        )
         temporary.replace(path)
 
     @property

@@ -1,9 +1,9 @@
 import json
 from pathlib import Path
 
+from leetcode_fsrs.config import LocalConfig
 from leetcode_fsrs.domain import EventType
 from leetcode_fsrs.event_store import EventStore
-from leetcode_fsrs.config import LocalConfig
 from leetcode_fsrs.services import ApplicationService, LibraryAccess
 
 
@@ -35,7 +35,9 @@ def test_scan_skips_corruption_and_incomplete_final_write(tmp_path: Path) -> Non
     assert result.problems[0].line == 2
 
 
-def test_missing_shared_directory_keeps_local_projection_readable(tmp_path: Path) -> None:
+def test_missing_shared_directory_keeps_local_projection_readable(
+    tmp_path: Path,
+) -> None:
     missing = tmp_path / "offline-mount"
     config = LocalConfig(shared_dir=str(missing))
 

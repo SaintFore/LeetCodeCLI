@@ -109,7 +109,9 @@ class ApplicationService:
     ) -> None:
         self._config = config
         self._config_path = config_path or config_home() / "config.json"
-        self._projection = Projection(database_path or data_home() / "projection.sqlite3")
+        self._projection = Projection(
+            database_path or data_home() / "projection.sqlite3"
+        )
         self._store: EventStore | None = None
         self._scan_problems: tuple[ScanProblem, ...] = ()
         self._semantic_errors: tuple[str, ...] = ()
@@ -125,11 +127,13 @@ class ApplicationService:
                 self._semantic_errors = (str(error),)
 
     @classmethod
-    def load(cls) -> "ApplicationService":
+    def load(cls) -> ApplicationService:
         path = config_home() / "config.json"
         return cls(LocalConfig.load(path), config_path=path)
 
-    def initialize_library(self, path: Path, timezone: str, username: str | None = None) -> None:
+    def initialize_library(
+        self, path: Path, timezone: str, username: str | None = None
+    ) -> None:
         try:
             ZoneInfo(timezone)
         except ZoneInfoNotFoundError as error:
@@ -146,7 +150,9 @@ class ApplicationService:
         try:
             self._config.save(self._config_path)
         except OSError as error:
-            raise InvalidOperationError(f"Could not save local configuration: {error}") from error
+            raise InvalidOperationError(
+                f"Could not save local configuration: {error}"
+            ) from error
         self._append(EventType.PREFERENCE_SET, {"key": "timezone", "value": timezone})
         if username:
             self.bind_account(username)
@@ -184,7 +190,9 @@ class ApplicationService:
         card = self._enrolled_card(reference)
         question_key = card.question_key
         if card.suspended:
-            raise InvalidOperationError(f"Question is already suspended: {question_key}")
+            raise InvalidOperationError(
+                f"Question is already suspended: {question_key}"
+            )
         return self._append(EventType.CARD_SUSPENDED, {"question_key": question_key})
 
     def resume(self, reference: str) -> StudyEvent:
@@ -234,22 +242,38 @@ class ApplicationService:
             try:
                 ZoneInfo(str(value))
             except ZoneInfoNotFoundError as error:
-                raise InvalidOperationError(f"Unknown IANA timezone: {value}") from error
+                raise InvalidOperationError(
+                    f"Unknown IANA timezone: {value}"
+                ) from error
         elif key in {"daily_limit", "new_limit"}:
             if isinstance(value, bool) or not isinstance(value, int) or value < 0:
                 raise InvalidOperationError(f"{key} must be a non-negative integer")
         elif key == "desired_retention":
-            if isinstance(value, bool) or not isinstance(value, (int, float)) or not 0 < value <= 1:
-                raise InvalidOperationError("desired_retention must be greater than 0 and at most 1")
+            if (
+                isinstance(value, bool)
+                or not isinstance(value, (int, float))
+                or not 0 < value <= 1
+            ):
+                raise InvalidOperationError(
+                    "desired_retention must be greater than 0 and at most 1"
+                )
         elif key == "language" and value not in {"zh", "en"}:
             raise InvalidOperationError("language must be zh or en")
-        elif key == "fsrs_parameters":
-            if value is not None and (
+        elif (
+            key == "fsrs_parameters"
+            and value is not None
+            and (
                 not isinstance(value, list)
                 or not value
-                or any(isinstance(item, bool) or not isinstance(item, (int, float)) for item in value)
-            ):
-                raise InvalidOperationError("fsrs_parameters must be null or a non-empty JSON number array")
+                or any(
+                    isinstance(item, bool) or not isinstance(item, (int, float))
+                    for item in value
+                )
+            )
+        ):
+            raise InvalidOperationError(
+                "fsrs_parameters must be null or a non-empty JSON number array"
+            )
         if key in {"desired_retention", "fsrs_parameters"}:
             candidate = self._preferences()
             if key == "desired_retention":
@@ -341,15 +365,21 @@ class ApplicationService:
             self._config.save(self._config_path)
         except OSError as error:
             self._config.solver_argv = previous
-            raise InvalidOperationError(f"Could not save local configuration: {error}") from error
+            raise InvalidOperationError(
+                f"Could not save local configuration: {error}"
+            ) from error
 
     def daily_plan(self, now: datetime | None = None) -> DailyPlan:
         preferences = self._preferences()
         instant = (now or datetime.now(UTC)).astimezone(UTC)
         timezone = ZoneInfo(str(preferences["timezone"]))
         local_now = instant.astimezone(timezone)
-        start_of_day = local_now.replace(hour=0, minute=0, second=0, microsecond=0).astimezone(UTC)
-        reviewed_today, new_reviewed_today = self._projection.review_activity_since(start_of_day)
+        start_of_day = local_now.replace(
+            hour=0, minute=0, second=0, microsecond=0
+        ).astimezone(UTC)
+        reviewed_today, new_reviewed_today = self._projection.review_activity_since(
+            start_of_day
+        )
         due: list[PlanItem] = []
         new: list[PlanItem] = []
         for card in self._projection.card_rows():
@@ -385,13 +415,17 @@ class ApplicationService:
         self._projection.upsert_questions(questions)
         enrolled = 0
         for question in questions:
-            if question.accepted and self.enroll(question.key, source="leetcode-import"):
+            if question.accepted and self.enroll(
+                question.key, source="leetcode-import"
+            ):
                 enrolled += 1
         return enrolled
 
     def _require_store(self) -> EventStore:
         if self._store is None:
-            raise NotConfiguredError("No study library configured; run `leetcode-fsrs init`")
+            raise NotConfiguredError(
+                "No study library configured; run `leetcode-fsrs init`"
+            )
         return self._store
 
     def _enrolled_card(self, reference: str) -> CardRecord:
@@ -419,7 +453,9 @@ class ApplicationService:
                 errno.EPERM,
                 errno.EROFS,
             }:
-                raise ReadOnlyLibraryError(f"Study library is read-only: {store.root}") from error
+                raise ReadOnlyLibraryError(
+                    f"Study library is read-only: {store.root}"
+                ) from error
             raise InvalidOperationError(str(error)) from error
         except EventStoreUnavailableError as error:
             raise ReadOnlyLibraryError(str(error)) from error

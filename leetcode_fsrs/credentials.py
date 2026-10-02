@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import os
 
-
 SERVICE = "leetcode-fsrs"
 ACCOUNT = "leetcode.com-session"
 
@@ -18,7 +17,7 @@ class CredentialStore:
             import keyring
 
             value = keyring.get_password(SERVICE, ACCOUNT)
-        except Exception:
+        except Exception:  # noqa: BLE001 - third-party keyring backends vary.
             return None
         return _cookie(value) if value else None
 
@@ -37,7 +36,7 @@ class CredentialStore:
             import keyring
 
             keyring.delete_password(SERVICE, ACCOUNT)
-        except Exception:
+        except Exception:  # noqa: BLE001, S110 - clearing absent credentials is idempotent.
             pass
 
 

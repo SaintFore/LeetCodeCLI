@@ -2,10 +2,11 @@
 
 from __future__ import annotations
 
+from collections.abc import Iterable
 from datetime import UTC, datetime
-from typing import Iterable
 
-from fsrs import Card, Rating as FsrsRating, Scheduler
+from fsrs import Card, Scheduler
+from fsrs import Rating as FsrsRating
 
 from .domain import Review, StudyPreferences
 
