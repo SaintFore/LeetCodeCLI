@@ -1,5 +1,9 @@
 # LeetCode FSRS
 
+<p align="center">
+  <img src="output/openai-image/leetcode-fsrs-icon.png" alt="LeetCode FSRS icon" width="192">
+</p>
+
 一个以 Textual TUI 为主、Typer CLI 为辅的 LeetCode 间隔复习工具。调度由官方 `py-fsrs` 完成；多设备复制交给 Syncthing、WebDAV 客户端等成熟工具。
 
 ## 安装

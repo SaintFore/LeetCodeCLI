@@ -4,7 +4,7 @@ How the engineering skills should consume this repo's domain documentation when 
 
 ## Before exploring, read these
 
-- `CONTEXT.md` at the repository root.
+- `GLOSSARY.md` at the repository root.
 - `docs/adr/`: read ADRs that affect the area being changed.
 
 If these files do not exist, proceed silently. The domain-modeling flow creates them lazily when terms or decisions are resolved.
@@ -15,15 +15,16 @@ This is a single-context repository:
 
 ```
 /
-├── CONTEXT.md
+├── GLOSSARY.md
 ├── docs/
 │   └── adr/
-└── leetcode_fsrs/
+├── leetcode_fsrs/
+└── leetcode_fsrs_cli/
 ```
 
 ## Use the glossary's vocabulary
 
-When output names a domain concept—in an issue title, refactor proposal, hypothesis, or test name—use the term defined in `CONTEXT.md`.
+When output names a domain concept—in an issue title, refactor proposal, hypothesis, or test name—use the term defined in `GLOSSARY.md`. Do not drift to synonyms that the glossary explicitly avoids.
 
 If a needed concept is absent, reconsider whether the project already has another term or record the gap for domain modeling.
 

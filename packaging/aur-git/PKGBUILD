@@ -48,4 +48,5 @@ package() {
   install -Dm644 README.md "$pkgdir/usr/share/doc/$pkgname/README.md"
   install -Dm644 docs/architecture.md "$pkgdir/usr/share/doc/$pkgname/architecture.md"
   install -Dm644 docs/sync.md "$pkgdir/usr/share/doc/$pkgname/sync.md"
+  install -Dm644 output/openai-image/leetcode-fsrs-icon.png "$pkgdir/usr/share/icons/hicolor/1024x1024/apps/leetcode-fsrs.png"
 }
