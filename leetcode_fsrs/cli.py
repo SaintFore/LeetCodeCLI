@@ -12,7 +12,12 @@ import typer
 from .credentials import CredentialStore
 from .domain import Rating
 from .leetcode_client import LeetCodeClient
-from .services import ApplicationService
+from .services import (
+    ApplicationError,
+    ApplicationService,
+    LibraryAccess,
+    QuestionNotFoundError,
+)
 
 
 app = typer.Typer(
@@ -51,7 +56,10 @@ def initialize(
 ) -> None:
     """Create or attach to a study library."""
     service = ApplicationService.load()
-    service.initialize_library(directory, timezone, username)
+    try:
+        service.initialize_library(directory, timezone, username)
+    except ApplicationError as error:
+        raise typer.BadParameter(str(error)) from error
     typer.echo(f"Study library: {directory.expanduser().resolve()}")
 
 
@@ -88,9 +96,11 @@ def rate(
 ) -> None:
     """Record one of the four FSRS ratings."""
     service = ApplicationService.load()
-    item = _question(service, question)
     timestamp = datetime.fromisoformat(at) if at else None
-    event = service.rate(item.key, rating, occurred_at=timestamp)
+    try:
+        event = service.rate(question, rating, occurred_at=timestamp)
+    except ApplicationError as error:
+        raise _question_error(error) from error
     typer.echo(event.event_id)
 
 
@@ -103,9 +113,12 @@ def import_accepted() -> None:
         raise typer.BadParameter("No session. Run `leetcode-fsrs auth login` or set LEETCODE_SESSION.")
     client = LeetCodeClient(cookie)
     username = client.username()
-    service.bind_account(username)
-    questions = client.questions()
-    enrolled = service.import_accepted(questions)
+    try:
+        service.bind_account(username)
+        questions = client.questions()
+        enrolled = service.import_accepted(questions)
+    except ApplicationError as error:
+        raise typer.BadParameter(str(error)) from error
     typer.echo(f"Cached {len(questions)} questions; enrolled {enrolled} newly accepted cards.")
 
 
@@ -113,15 +126,19 @@ def import_accepted() -> None:
 def status() -> None:
     """Show library, projection, and synchronization health."""
     service = ApplicationService.load()
-    counts = service.projection.counts()
-    typer.echo(f"Library: {service.config.shared_dir or 'not configured'}")
-    typer.echo(f"Account: {service.projection.account() or 'not bound'}")
-    typer.echo(f"Read-only: {'yes' if service.read_only else 'no'}")
-    typer.echo("  ".join(f"{key}: {value}" for key, value in counts.items()))
-    for problem in service.scan_problems:
+    health = service.health()
+    typer.echo(f"Library: {health.shared_path or 'not configured'}")
+    typer.echo(f"Account: {health.account or 'not bound'}")
+    typer.echo(f"Read-only: {'yes' if health.access is LibraryAccess.READ_ONLY else 'no'}")
+    counts = health.counts
+    typer.echo(
+        f"questions: {counts.questions}  cards: {counts.cards}  "
+        f"reviews: {counts.reviews}  suspended: {counts.suspended}"
+    )
+    for problem in health.scan_problems:
         location = f"{problem.path}:{problem.line}" if problem.line else problem.path
         typer.echo(f"warning: {location}: {problem.message}", err=True)
-    for error in service.semantic_errors:
+    for error in health.semantic_problems:
         typer.echo(f"warning: {error}", err=True)
 
 
@@ -152,21 +169,31 @@ def auth_logout() -> None:
 @card_app.command("enroll")
 def card_enroll(question: str) -> None:
     service = ApplicationService.load()
-    item = _question(service, question)
-    event = service.enroll(item.key)
+    try:
+        event = service.enroll(question)
+    except ApplicationError as error:
+        raise _question_error(error) from error
     typer.echo(event.event_id if event else "Already enrolled.")
 
 
 @card_app.command("suspend")
 def card_suspend(question: str) -> None:
     service = ApplicationService.load()
-    typer.echo(service.suspend(_question(service, question).key).event_id)
+    try:
+        event = service.suspend(question)
+    except ApplicationError as error:
+        raise _question_error(error) from error
+    typer.echo(event.event_id)
 
 
 @card_app.command("resume")
 def card_resume(question: str) -> None:
     service = ApplicationService.load()
-    typer.echo(service.resume(_question(service, question).key).event_id)
+    try:
+        event = service.resume(question)
+    except ApplicationError as error:
+        raise _question_error(error) from error
+    typer.echo(event.event_id)
 
 
 @config_app.command("set")
@@ -179,7 +206,10 @@ def config_set(key: str, value: str) -> None:
         parsed = json.loads(value)
     except json.JSONDecodeError:
         parsed = value
-    ApplicationService.load().set_preference(key, parsed)
+    try:
+        ApplicationService.load().set_preference(key, parsed)
+    except ApplicationError as error:
+        raise typer.BadParameter(str(error)) from error
     typer.echo(f"{key} = {parsed!r}")
 
 
@@ -187,16 +217,16 @@ def config_set(key: str, value: str) -> None:
 def config_solver(command: str) -> None:
     """Set this device's solver command; placeholders include {slug} and {url}."""
     service = ApplicationService.load()
-    service.config.set_solver_command(command)
-    service.config.save(service.config_path)
+    try:
+        service.set_solver_command(command)
+    except ApplicationError as error:
+        raise typer.BadParameter(str(error)) from error
     typer.echo("Solver command updated for this device.")
 
 
-def _question(service: ApplicationService, reference: str):
-    question = service.projection.resolve_question(reference)
-    if not question:
-        raise typer.BadParameter(f"Unknown question: {reference}. Run import-accepted first.")
-    return question
+def _question_error(error: ApplicationError) -> typer.BadParameter:
+    suffix = ". Run import-accepted first." if isinstance(error, QuestionNotFoundError) else ""
+    return typer.BadParameter(f"{error}{suffix}")
 
 
 def main() -> None:

@@ -2,8 +2,10 @@
 
 ## Boundaries
 
-- `tui.py` and `cli.py` are adapters. They contain no scheduling or persistence policy.
-- `services.py` owns use cases and daily-plan policy.
+- `tui.py` and `cli.py` are adapters. They depend only on the public `ApplicationService`
+  facade and contain no scheduling or persistence policy.
+- `services.py` owns application queries, command orchestration, question-reference
+  resolution, expected operational errors, refresh behavior, and Daily Plan policy.
 - `fsrs_engine.py` is the only adapter to `py-fsrs`.
 - `event_store.py` owns append-only, replication-safe facts.
 - `projection.py` owns the disposable local SQLite read model and LeetCode metadata cache.
@@ -12,14 +14,26 @@
 ## Write and read paths
 
 ```text
-TUI / CLI -> ApplicationService -> append NDJSON event
-                                  -> rescan all event files
-                                  -> rebuild local SQLite projection
+TUI / CLI / application behavior tests -> ApplicationService -> append NDJSON Study Event
+                                                           -> rescan Study Library files
+                                                           -> rebuild local SQLite Projection
 
-TUI / CLI <- daily plan <- replay reviews through py-fsrs <- SQLite projection
+TUI / CLI <- immutable read values <- ApplicationService <- SQLite Projection
+                                      |
+                                      +-> replay reviews through py-fsrs
 ```
 
 The event log is authoritative. SQLite uses WAL locally but is never replicated. Rebuilding after every current write favors correctness and a small interface over premature incremental-projection complexity.
+
+`ApplicationService` exposes purpose-specific queries for the Daily Plan, Question
+Cache search and lookup, library health, settings, and Solver input, plus direct intent
+methods for writes. Its Projection, local configuration, Event Store, paths, access
+flags, and diagnostic collections are private. Adapters receive frozen dataclasses,
+enums, domain values, and tuples rather than SQLite rows or mutable storage objects.
+
+Question Cache search reads only local SQLite metadata. Startup performs a best-effort
+Study Library refresh, explicit refresh rescans and rebuilds, and each successful Study
+Event write refreshes before returning so subsequent application reads see the change.
 
 ## Scheduling invariants
 

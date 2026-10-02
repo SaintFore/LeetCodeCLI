@@ -4,11 +4,12 @@ from __future__ import annotations
 
 import os
 import subprocess
+from collections.abc import Sequence
 
 from .domain import Question
 
 
-def run_solver(argv: list[str], question: Question) -> int:
+def run_solver(argv: Sequence[str], question: Question) -> int:
     if not argv:
         raise ValueError("Solver command is empty")
     values = {

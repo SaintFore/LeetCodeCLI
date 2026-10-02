@@ -5,11 +5,24 @@ from __future__ import annotations
 import json
 import sqlite3
 from contextlib import contextmanager
+from dataclasses import dataclass
 from datetime import UTC, datetime
 from pathlib import Path
 from typing import Iterable, Iterator
 
-from .domain import EventType, Question, Rating, StudyEvent
+from .domain import EventType, Question, Rating, Review, StudyEvent
+
+
+@dataclass(frozen=True, slots=True)
+class CardRecord:
+    question_key: str
+    enrolled_at: datetime
+    source: str
+    suspended: bool
+    frontend_id: str | None = None
+    slug: str | None = None
+    title: str | None = None
+    difficulty: str | None = None
 
 
 class Projection:
@@ -224,48 +237,57 @@ class Projection:
 
     def resolve_question(self, reference: str) -> Question | None:
         with self.connect() as db:
-            row = db.execute(
-                """
-                SELECT * FROM questions
-                WHERE question_key = ? OR slug = ? OR frontend_id = ?
-                LIMIT 1
-                """,
-                (reference, reference, reference),
-            ).fetchone()
+            row = None
+            for column in ("question_key", "slug", "frontend_id"):
+                row = db.execute(
+                    f"SELECT * FROM questions WHERE {column} = ? ORDER BY question_key LIMIT 1",
+                    (reference,),
+                ).fetchone()
+                if row is not None:
+                    break
         return _row_question(row) if row else None
 
-    def card_rows(self) -> list[sqlite3.Row]:
+    def card_rows(self) -> list[CardRecord]:
         with self.connect() as db:
-            return db.execute(
+            rows = db.execute(
                 """
                 SELECT c.*, q.frontend_id, q.slug, q.title, q.difficulty
                 FROM cards c LEFT JOIN questions q ON q.question_key = c.question_key
                 WHERE c.suspended = 0
                 """
             ).fetchall()
+        return [_row_card(row) for row in rows]
 
-    def card(self, question_key: str) -> sqlite3.Row | None:
+    def card(self, question_key: str) -> CardRecord | None:
         with self.connect() as db:
-            return db.execute(
+            row = db.execute(
                 "SELECT * FROM cards WHERE question_key = ?", (question_key,)
             ).fetchone()
+        return _row_card(row) if row else None
 
-    def all_card_rows(self) -> list[sqlite3.Row]:
+    def all_card_rows(self) -> list[CardRecord]:
         with self.connect() as db:
-            return db.execute(
+            rows = db.execute(
                 """
                 SELECT c.*, q.frontend_id, q.slug, q.title, q.difficulty
                 FROM cards c LEFT JOIN questions q ON q.question_key = c.question_key
                 ORDER BY c.enrolled_at, c.question_key
                 """
             ).fetchall()
+        return [_row_card(row) for row in rows]
 
-    def reviews(self, question_key: str) -> list[sqlite3.Row]:
+    def reviews(self, question_key: str) -> list[Review]:
         with self.connect() as db:
-            return db.execute(
+            rows = db.execute(
                 "SELECT * FROM reviews WHERE question_key = ? AND voided = 0 ORDER BY occurred_at, event_id",
                 (question_key,),
             ).fetchall()
+        return [_row_review(row) for row in rows]
+
+    def has_review(self, event_id: str) -> bool:
+        with self.connect() as db:
+            row = db.execute("SELECT 1 FROM reviews WHERE event_id = ?", (event_id,)).fetchone()
+        return row is not None
 
     def review_activity_since(self, since: datetime) -> tuple[int, int]:
         """Return total and first-ever reviews since an aware UTC instant."""
@@ -320,4 +342,32 @@ def _row_question(row: sqlite3.Row) -> Question:
         url=str(row["url"]),
         accepted=bool(row["accepted"]),
         content=str(row["content"]),
+    )
+
+
+def _row_card(row: sqlite3.Row) -> CardRecord:
+    keys = set(row.keys())
+    return CardRecord(
+        question_key=str(row["question_key"]),
+        enrolled_at=datetime.fromisoformat(str(row["enrolled_at"])),
+        source=str(row["source"]),
+        suspended=bool(row["suspended"]),
+        frontend_id=(
+            str(row["frontend_id"])
+            if "frontend_id" in keys and row["frontend_id"] is not None
+            else None
+        ),
+        slug=str(row["slug"]) if "slug" in keys and row["slug"] is not None else None,
+        title=str(row["title"]) if "title" in keys and row["title"] is not None else None,
+        difficulty=str(row["difficulty"]) if "difficulty" in keys and row["difficulty"] is not None else None,
+    )
+
+
+def _row_review(row: sqlite3.Row) -> Review:
+    return Review(
+        event_id=str(row["event_id"]),
+        question_key=str(row["question_key"]),
+        rating=Rating(str(row["rating"])),
+        occurred_at=datetime.fromisoformat(str(row["occurred_at"])),
+        corrected_by=str(row["corrected_by"]) if row["corrected_by"] is not None else None,
     )

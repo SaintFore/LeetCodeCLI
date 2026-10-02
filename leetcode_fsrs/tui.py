@@ -12,7 +12,7 @@ from textual.widgets import Button, DataTable, Footer, Header, Input, Label, Sta
 from .domain import PlanItem, Rating
 from .credentials import CredentialStore
 from .leetcode_client import LeetCodeClient
-from .services import ApplicationService
+from .services import ApplicationError, ApplicationService, CardState, LibraryAccess
 from .solver import run_solver
 
 
@@ -63,7 +63,7 @@ class LeetCodeFsrsApp(App[None]):
     def __init__(self, service: ApplicationService | None = None) -> None:
         super().__init__()
         self.service = service or ApplicationService.load()
-        self.english = self.service.projection.preference("language", "zh") == "en"
+        self.english = self.service.settings().language == "en"
         self.plan_items: list[PlanItem] = []
         self.current_key: str | None = None
         self.solved_key: str | None = None
@@ -99,7 +99,7 @@ class LeetCodeFsrsApp(App[None]):
 
     def on_mount(self) -> None:
         self._setup_tables()
-        if self.service.store is None:
+        if self.service.health().access is LibraryAccess.UNCONFIGURED:
             self.push_screen(SetupScreen(), self._finish_setup)
         else:
             self.refresh_views()
@@ -111,7 +111,7 @@ class LeetCodeFsrsApp(App[None]):
         path, timezone, username = result
         try:
             self.service.initialize_library(path, timezone, username)
-        except Exception as error:
+        except ApplicationError as error:
             self.notify(str(error), severity="error")
             self.push_screen(SetupScreen(), self._finish_setup)
             return
@@ -130,14 +130,15 @@ class LeetCodeFsrsApp(App[None]):
     def _text(self, chinese: str, english: str) -> str:
         return english if self.english else chinese
 
-    def refresh_views(self) -> None:
-        try:
-            self.service.refresh()
-        except Exception as error:
-            self.query_one("#health", Label).update(f"错误: {error}")
+    def refresh_views(self, *, scan_library: bool = False) -> None:
+        if scan_library:
+            try:
+                self.service.refresh()
+            except ApplicationError as error:
+                self.query_one("#health", Label).update(f"错误: {error}")
         try:
             plan = self.service.daily_plan()
-        except Exception as error:
+        except ApplicationError as error:
             self.query_one("#health", Label).update(f"调度错误: {error}")
             return
 
@@ -156,36 +157,41 @@ class LeetCodeFsrsApp(App[None]):
 
         questions = self.query_one("#questions-table", DataTable)
         questions.clear()
-        cards = {str(row["question_key"]): bool(row["suspended"]) for row in self.service.projection.all_card_rows()}
         search = self.query_one("#question-search", Input).value
-        for question in self.service.projection.questions(search):
-            state = "暂停" if cards.get(question.key) else "学习中" if question.key in cards else "—"
+        for item in self.service.questions(search):
+            question = item.question
+            state = {
+                CardState.NOT_ENROLLED: "—",
+                CardState.ACTIVE: "学习中",
+                CardState.SUSPENDED: "暂停",
+            }[item.state]
             questions.add_row(question.frontend_id, question.title, question.difficulty, state, key=question.key)
 
-        counts = self.service.projection.counts()
+        health = self.service.health()
+        counts = health.counts
         self.query_one("#stats", Static).update(
-            f"题目缓存: {counts['questions']}\n复习卡片: {counts['cards']}\n复习记录: {counts['reviews']}\n暂停: {counts['suspended']}\n"
+            f"题目缓存: {counts.questions}\n复习卡片: {counts.cards}\n复习记录: {counts.reviews}\n暂停: {counts.suspended}\n"
             f"今日到期积压: {plan.due_backlog}\n新题积压: {plan.new_backlog}"
         )
-        problems = len(self.service.scan_problems) + len(self.service.semantic_errors)
+        problems = len(health.scan_problems) + len(health.semantic_problems)
         self.query_one("#data-status", Static).update(
-            f"共享目录: {self.service.config.shared_dir}\n"
-            f"账号: {self.service.projection.account() or '未绑定'}\n"
-            f"模式: {'只读' if self.service.read_only else '可写'}\n"
+            f"共享目录: {health.shared_path or ''}\n"
+            f"账号: {health.account or '未绑定'}\n"
+            f"模式: {'只读' if health.access is LibraryAccess.READ_ONLY else '可写'}\n"
             f"扫描问题: {problems}\n\n同步提示：让 Syncthing/WebDAV 客户端同步整个共享目录；请勿同步本机 SQLite。"
         )
-        prefs = self.service.preferences()
+        settings = self.service.settings()
         self.query_one("#settings", Static).update(
-            f"时区: {prefs['timezone']}\n每日上限: {prefs['daily_limit']}\n新题上限: {prefs['new_limit']}\n"
-            f"期望记忆率: {prefs['desired_retention']}\n语言: {prefs['language']}\n"
-            f"本机解题器: {' '.join(self.service.config.solver_argv)}\n\n更多设置请使用 leetcode-fsrs config。"
+            f"时区: {settings.timezone}\n每日上限: {settings.daily_limit}\n新题上限: {settings.new_limit}\n"
+            f"期望记忆率: {settings.desired_retention}\n语言: {settings.language}\n"
+            f"本机解题器: {' '.join(settings.solver_command)}\n\n更多设置请使用 leetcode-fsrs config。"
         )
         self.query_one("#health", Label).update(
             f"Due {plan.due_backlog} · New {plan.new_backlog} · Selected {len(plan.items)}"
         )
 
     def action_refresh_data(self) -> None:
-        self.refresh_views()
+        self.refresh_views(scan_library=True)
         self.notify("已从共享事件日志重建。")
 
     def on_data_table_row_selected(self, event: DataTable.RowSelected) -> None:
@@ -193,7 +199,7 @@ class LeetCodeFsrsApp(App[None]):
             self.current_key = str(event.row_key.value)
 
     def on_input_changed(self, event: Input.Changed) -> None:
-        if event.input.id == "question-search" and self.service.store:
+        if event.input.id == "question-search" and self.service.health().access is not LibraryAccess.UNCONFIGURED:
             self.refresh_views()
 
     def on_button_pressed(self, event: Button.Pressed) -> None:
@@ -210,7 +216,7 @@ class LeetCodeFsrsApp(App[None]):
             elif button_id == "import-accepted":
                 self.notify(self._text("正在从 LeetCode 导入…", "Importing from LeetCode…"))
                 self.run_worker(self._import_accepted, thread=True, exclusive=True, group="leetcode-import")
-        except Exception as error:
+        except (ApplicationError, ValueError) as error:
             self.notify(str(error), severity="error")
 
     def _selected_key(self, table_id: str) -> str | None:
@@ -223,11 +229,9 @@ class LeetCodeFsrsApp(App[None]):
         key = self._selected_key("#today-table")
         if not key:
             raise ValueError("今日没有可复习题目。")
-        question = self.service.projection.question(key)
-        if not question:
-            raise ValueError(f"题目缓存缺失: {key}")
+        solver_input = self.service.solver_input(key)
         with self.suspend():
-            exit_code = run_solver(self.service.config.solver_argv, question)
+            exit_code = run_solver(solver_input.command, solver_input.question)
         self.solved_key = key
         self.notify(f"解题器已退出（{exit_code}）。请选择 Again / Hard / Good / Easy，或跳过。")
 

@@ -4,7 +4,7 @@ from pathlib import Path
 from leetcode_fsrs.domain import EventType
 from leetcode_fsrs.event_store import EventStore
 from leetcode_fsrs.config import LocalConfig
-from leetcode_fsrs.services import ApplicationService
+from leetcode_fsrs.services import ApplicationService, LibraryAccess
 
 
 def test_two_devices_merge_without_editing_the_same_file(tmp_path: Path) -> None:
@@ -45,6 +45,7 @@ def test_missing_shared_directory_keeps_local_projection_readable(tmp_path: Path
         database_path=tmp_path / "projection.sqlite3",
     )
 
-    assert service.read_only is True
-    assert service.semantic_errors
-    assert service.projection.counts()["cards"] == 0
+    health = service.health()
+    assert health.access is LibraryAccess.READ_ONLY
+    assert health.semantic_problems
+    assert health.counts.cards == 0
