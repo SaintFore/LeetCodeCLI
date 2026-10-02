@@ -263,16 +263,21 @@ class LeetCodeFsrsApp(App[None]):
         self.refresh_views()
 
     def _import_accepted(self) -> None:
+        cookie = CredentialStore().load()
+        if not cookie:
+            self.call_from_thread(
+                self.notify,
+                "No session; run `leetcode-fsrs auth login` or set LEETCODE_SESSION.",
+                severity="error",
+            )
+            return
         try:
-            cookie = CredentialStore().load()
-            if not cookie:
-                raise ValueError("No session; run `leetcode-fsrs auth login` or set LEETCODE_SESSION.")
             client = LeetCodeClient(cookie)
             username = client.username()
             self.service.bind_account(username)
             questions = client.questions()
             enrolled = self.service.import_accepted(questions)
-        except (ApplicationError, LeetCodeError, ValueError) as error:
+        except (ApplicationError, LeetCodeError) as error:
             self.call_from_thread(self.notify, str(error), severity="error")
             return
         self.call_from_thread(self.refresh_views)

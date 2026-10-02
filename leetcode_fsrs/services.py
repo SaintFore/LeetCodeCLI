@@ -12,7 +12,7 @@ from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
 from .config import LocalConfig, config_home, data_home
 from .domain import DailyPlan, EventType, PlanItem, Question, Rating, ScanProblem, StudyEvent
-from .event_store import EventStore, EventStoreError
+from .event_store import EventStore, EventStoreError, EventStoreUnavailableError
 from .fsrs_engine import replay_due, scheduler_from_preferences
 from .projection import CardRecord, Projection
 
@@ -404,9 +404,9 @@ class ApplicationService:
             }:
                 raise ReadOnlyLibraryError(f"Study library is read-only: {store.root}") from error
             raise InvalidOperationError(str(error)) from error
+        except EventStoreUnavailableError as error:
+            raise ReadOnlyLibraryError(str(error)) from error
         except EventStoreError as error:
-            if "read-only" in str(error) or "unavailable" in str(error):
-                raise ReadOnlyLibraryError(str(error)) from error
             raise InvalidOperationError(str(error)) from error
         self.refresh()
         return event

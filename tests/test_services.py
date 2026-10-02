@@ -221,3 +221,57 @@ def test_explicit_refresh_reports_replicated_events_and_problems(service, tmp_pa
     health = service.health()
     assert health.counts.cards == 1
     assert len(health.scan_problems) == 1
+
+
+def test_startup_refreshes_an_existing_study_library(tmp_path: Path) -> None:
+    shared = tmp_path / "shared"
+    store = EventStore.create(shared, "22222222-2222-4222-8222-222222222222")
+    store.append(EventType.CARD_ENROLLED, {"question_key": "leetcode.com:replicated"})
+
+    service = ApplicationService(
+        LocalConfig(shared_dir=str(shared)),
+        config_path=tmp_path / "config.json",
+        database_path=tmp_path / "projection.sqlite3",
+    )
+
+    assert service.health().counts.cards == 1
+
+
+def test_health_reports_semantic_problems(service, tmp_path: Path) -> None:
+    replica = EventStore(
+        tmp_path / "shared",
+        "22222222-2222-4222-8222-222222222222",
+    )
+    replica.append(
+        EventType.ACCOUNT_BOUND,
+        {"username": "bob", "site": "leetcode.com"},
+    )
+
+    service.refresh()
+
+    assert service.health().semantic_problems == (
+        "study library is already bound to alice",
+    )
+
+
+def test_all_study_event_commands_reject_a_read_only_library(service, monkeypatch) -> None:
+    first, second, third = questions(3)
+    service.cache_questions([first, second, third])
+    service.enroll(first.key)
+    service.enroll(second.key)
+    service.suspend(second.key)
+    review = service.rate(first.key, Rating.GOOD)
+    monkeypatch.setattr(EventStore, "writable", lambda self: False)
+
+    operations = (
+        lambda: service.bind_account("alice"),
+        lambda: service.enroll(third.key),
+        lambda: service.suspend(first.key),
+        lambda: service.resume(second.key),
+        lambda: service.rate(first.key, Rating.GOOD),
+        lambda: service.correct_review(review.event_id, Rating.EASY),
+        lambda: service.set_preference("daily_limit", 10),
+    )
+    for operation in operations:
+        with pytest.raises(ReadOnlyLibraryError):
+            operation()
